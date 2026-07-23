@@ -32,6 +32,9 @@ class WebhookProcessingServiceTest {
     private ShipmentEventRepository shipmentEventRepository;
 
     @Mock
+    private EventPersistenceService eventPersistenceService;
+
+    @Mock
     private OrderRepository orderRepository;
 
     @Spy
@@ -76,11 +79,12 @@ class WebhookProcessingServiceTest {
             """;
 
         when(shipmentRepository.findByTrackingNumber("FST123456789")).thenReturn(Optional.of(testShipment));
+        when(eventPersistenceService.saveEventIdempotently(any(ShipmentEvent.class))).thenReturn(true);
 
         WebhookProcessingService.WebhookResult result = webhookProcessingService.processFastShipWebhook(payload);
 
         assertThat(result.status()).isEqualTo("PROCESSED");
-        verify(shipmentEventRepository).saveAndFlush(any(ShipmentEvent.class));
+        verify(eventPersistenceService).saveEventIdempotently(any(ShipmentEvent.class));
         assertThat(testShipment.getCurrentStatus()).isEqualTo("IN_TRANSIT");
         assertThat(testOrder.getOrderStatus()).isEqualTo("IN_TRANSIT");
     }
@@ -103,6 +107,7 @@ class WebhookProcessingServiceTest {
             """;
 
         when(shipmentRepository.findByTrackingNumber("QE987654321")).thenReturn(Optional.of(testShipment));
+        when(eventPersistenceService.saveEventIdempotently(any(ShipmentEvent.class))).thenReturn(true);
 
         WebhookProcessingService.WebhookResult result = webhookProcessingService.processQuickExpressWebhook(payload);
 
@@ -126,6 +131,7 @@ class WebhookProcessingServiceTest {
             """;
 
         when(shipmentRepository.findByTrackingNumber("RC1122334455")).thenReturn(Optional.of(testShipment));
+        when(eventPersistenceService.saveEventIdempotently(any(ShipmentEvent.class))).thenReturn(true);
 
         WebhookProcessingService.WebhookResult result = webhookProcessingService.processReliableWebhook(payload);
 
@@ -149,7 +155,7 @@ class WebhookProcessingServiceTest {
 
         assertThat(result.status()).isEqualTo("IGNORED");
         assertThat(result.message()).isEqualTo("UNKNOWN_SHIPMENT");
-        verify(shipmentEventRepository, never()).saveAndFlush(any());
+        verify(eventPersistenceService, never()).saveEventIdempotently(any());
     }
 
     @Test
@@ -163,7 +169,7 @@ class WebhookProcessingServiceTest {
             """;
 
         when(shipmentRepository.findByTrackingNumber("FST123456789")).thenReturn(Optional.of(testShipment));
-        when(shipmentEventRepository.saveAndFlush(any())).thenThrow(new DataIntegrityViolationException("Unique constraint violation"));
+        when(eventPersistenceService.saveEventIdempotently(any())).thenReturn(false);
 
         WebhookProcessingService.WebhookResult result = webhookProcessingService.processFastShipWebhook(payload);
 
@@ -188,6 +194,6 @@ class WebhookProcessingServiceTest {
 
         assertThat(result.status()).isEqualTo("REJECTED_INVALID_TRANSITION");
         assertThat(testShipment.getCurrentStatus()).isEqualTo("DELIVERED"); // Status untouched
-        verify(shipmentEventRepository, never()).saveAndFlush(any());
+        verify(eventPersistenceService, never()).saveEventIdempotently(any());
     }
 }

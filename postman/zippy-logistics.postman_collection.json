@@ -1,0 +1,237 @@
+{
+  "info": {
+    "name": "Zippy Logistics Platform API",
+    "_postman_id": "71c8749c-6159-4cc7-9709-189bb094be15",
+    "description": "Postman Collection for Zippy Multi-Courier Logistics Aggregator Platform, covering Order CRUD, Rate Aggregation, Carrier Selection, Shipment Creation, Webhooks, Tracking, and Mock Simulation.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Order Management",
+      "item": [
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"merchantOrderId\": \"MERCHANT-10001\",\n  \"customer\": {\n    \"name\": \"Rahul Sharma\",\n    \"phone\": \"9876543210\",\n    \"email\": \"rahul@example.com\"\n  },\n  \"pickupAddress\": {\n    \"addressLine1\": \"15 MG Road\",\n    \"city\": \"Bengaluru\",\n    \"state\": \"Karnataka\",\n    \"pincode\": \"560001\"\n  },\n  \"deliveryAddress\": {\n    \"addressLine1\": \"22 Connaught Place\",\n    \"city\": \"New Delhi\",\n    \"state\": \"Delhi\",\n    \"pincode\": \"110001\"\n  },\n  \"package\": {\n    \"weightGrams\": 1500,\n    \"lengthCm\": 20,\n    \"widthCm\": 15,\n    \"heightCm\": 10\n  },\n  \"paymentType\": \"COD\",\n  \"codAmount\": 2500.00\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/orders",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "orders"]
+            }
+          }
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/orders/ZPY-ORD-10001",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "orders", "ZPY-ORD-10001"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Rate Aggregation",
+      "item": [
+        {
+          "name": "Fetch Live Parallel Rates",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/orders/ZPY-ORD-10001/rates?sort=price",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "orders", "ZPY-ORD-10001", "rates"],
+              "query": [{ "key": "sort", "value": "price" }]
+            }
+          }
+        },
+        {
+          "name": "Get Cached Rates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/orders/ZPY-ORD-10001/rates?sort=speed",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "orders", "ZPY-ORD-10001", "rates"],
+              "query": [{ "key": "sort", "value": "speed" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Carrier Selection",
+      "item": [
+        {
+          "name": "Select Carrier & Freeze Rate",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"carrierCode\": \"FASTSHIP\",\n  \"serviceCode\": \"FAST-AIR\",\n  \"quotedAmount\": 182.90\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/orders/ZPY-ORD-10001/select-carrier",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "orders", "ZPY-ORD-10001", "select-carrier"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Shipment Creation",
+      "item": [
+        {
+          "name": "Create Shipment with Courier",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/orders/ZPY-ORD-10001/create-shipment",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "orders", "ZPY-ORD-10001", "create-shipment"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Order Tracking",
+      "item": [
+        {
+          "name": "Get Order Tracking History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/orders/ZPY-ORD-10001/tracking",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "orders", "ZPY-ORD-10001", "tracking"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Webhook Endpoints",
+      "item": [
+        {
+          "name": "FastShip Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shipment_id\": \"FS-700001\",\n  \"tracking_number\": \"FST123456789\",\n  \"event_code\": \"IN_TRANSIT\",\n  \"event_description\": \"Departed Bengaluru hub\",\n  \"event_time\": \"2026-07-15T10:30:00Z\",\n  \"location\": \"Bengaluru Hub\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/webhooks/fastship",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "webhooks", "fastship"]
+            }
+          }
+        },
+        {
+          "name": "QuickExpress Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"awb\": \"QE987654321\",\n  \"event\": {\n    \"type\": \"OFD\",\n    \"message\": \"Out for delivery\",\n    \"occurredAt\": \"2026-07-17T08:15:00Z\"\n  },\n  \"facility\": { \"city\": \"New Delhi\", \"code\": \"DEL-01\" }\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/webhooks/quickexpress",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "webhooks", "quickexpress"]
+            }
+          }
+        },
+        {
+          "name": "ReliableCourier Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trackingCode\": \"RC1122334455\",\n  \"statusId\": 50,\n  \"statusText\": \"Delivered\",\n  \"updatedOn\": \"2026-07-19T15:45:00Z\",\n  \"proofOfDelivery\": { \"receivedBy\": \"Rahul Sharma\", \"deliveryLocation\": \"New Delhi\" }\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/webhooks/reliable",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "webhooks", "reliable"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Mock Simulation Controls",
+      "item": [
+        {
+          "name": "Advance Mock Courier Status",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trackingNumber\": \"FST123456789\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8081/mock/shipments/fastship/advance",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8081",
+              "path": ["mock", "shipments", "fastship", "advance"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

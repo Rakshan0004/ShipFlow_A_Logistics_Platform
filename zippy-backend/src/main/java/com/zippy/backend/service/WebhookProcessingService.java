@@ -6,11 +6,9 @@ import com.zippy.backend.model.Order;
 import com.zippy.backend.model.Shipment;
 import com.zippy.backend.model.ShipmentEvent;
 import com.zippy.backend.repository.OrderRepository;
-import com.zippy.backend.repository.ShipmentEventRepository;
 import com.zippy.backend.repository.ShipmentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,18 +23,18 @@ public class WebhookProcessingService {
     public record WebhookResult(String status, String message) {}
 
     private final ShipmentRepository shipmentRepository;
-    private final ShipmentEventRepository shipmentEventRepository;
+    private final EventPersistenceService eventPersistenceService;
     private final OrderRepository orderRepository;
     private final StatusNormalizationService statusNormalizationService;
     private final ObjectMapper objectMapper;
 
     public WebhookProcessingService(ShipmentRepository shipmentRepository,
-                                    ShipmentEventRepository shipmentEventRepository,
+                                    EventPersistenceService eventPersistenceService,
                                     OrderRepository orderRepository,
                                     StatusNormalizationService statusNormalizationService,
                                     ObjectMapper objectMapper) {
         this.shipmentRepository = shipmentRepository;
-        this.shipmentEventRepository = shipmentEventRepository;
+        this.eventPersistenceService = eventPersistenceService;
         this.orderRepository = orderRepository;
         this.statusNormalizationService = statusNormalizationService;
         this.objectMapper = objectMapper;
@@ -144,9 +142,8 @@ public class WebhookProcessingService {
         event.setEventTime(eventTime);
         event.setRawEventPayload(rawPayload);
 
-        try {
-            shipmentEventRepository.saveAndFlush(event);
-        } catch (DataIntegrityViolationException e) {
+        boolean saved = eventPersistenceService.saveEventIdempotently(event);
+        if (!saved) {
             log.info("Duplicate webhook event ignored for key: {}", idempotencyKey);
             return new WebhookResult("DUPLICATE_IGNORED", "Event already processed");
         }

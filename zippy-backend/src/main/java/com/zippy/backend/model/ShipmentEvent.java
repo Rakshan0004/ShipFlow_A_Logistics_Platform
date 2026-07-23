@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import java.time.Instant;
 
 @Entity
-@Table(name = "shipment_events")
+@Table(name = "shipment_events", uniqueConstraints = {
+    @UniqueConstraint(name = "idx_shipment_events_idempotency", columnNames = {"shipment_id", "carrier_event_id"})
+})
 public class ShipmentEvent {
 
     @Id
