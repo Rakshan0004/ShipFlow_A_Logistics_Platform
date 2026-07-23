@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.zippy.backend.controller.OrderControllerTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-07-23T13:47:08" hostname="RAKSHAN-LEGION" time="0.546">
+<testsuite name="com.zippy.backend.controller.OrderControllerTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-07-23T14:04:55" hostname="RAKSHAN-LEGION" time="0.479">
   <properties/>
-  <testcase name="shouldReturn400OnInvalidOrder()" classname="com.zippy.backend.controller.OrderControllerTest" time="0.482"/>
-  <testcase name="shouldReturn404ForUnknownOrderId()" classname="com.zippy.backend.controller.OrderControllerTest" time="0.036"/>
+  <testcase name="shouldReturn400OnInvalidOrder()" classname="com.zippy.backend.controller.OrderControllerTest" time="0.427"/>
+  <testcase name="shouldReturn404ForUnknownOrderId()" classname="com.zippy.backend.controller.OrderControllerTest" time="0.025"/>
   <testcase name="shouldReturn201OnValidOrderCreation()" classname="com.zippy.backend.controller.OrderControllerTest" time="0.023"/>
-  <system-out><![CDATA[19:17:04.891 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.zippy.backend.controller.OrderControllerTest]: OrderControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-19:17:05.069 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.zippy.backend.ZippyApplication for test class com.zippy.backend.controller.OrderControllerTest
+  <system-out><![CDATA[19:34:51.121 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.zippy.backend.controller.OrderControllerTest]: OrderControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+19:34:51.324 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.zippy.backend.ZippyApplication for test class com.zippy.backend.controller.OrderControllerTest
   .   ____          _            __ _ _
  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
 ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
@@ -15,16 +15,12 @@
 
  :: Spring Boot ::                (v3.3.0)
 
-2026-07-23T19:17:05.649+05:30  INFO 31920 --- [zippy-backend] [    Test worker] c.z.b.controller.OrderControllerTest     : Starting OrderControllerTest using Java 21.0.9 with PID 31920 (started by Rakshan in C:\Projects\Logistics Platform\zippy-backend)
-2026-07-23T19:17:05.651+05:30  INFO 31920 --- [zippy-backend] [    Test worker] c.z.b.controller.OrderControllerTest     : No active profile set, falling back to 1 default profile: "default"
-2026-07-23T19:17:08.689+05:30  INFO 31920 --- [zippy-backend] [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
-2026-07-23T19:17:08.690+05:30  INFO 31920 --- [zippy-backend] [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
-2026-07-23T19:17:08.692+05:30  INFO 31920 --- [zippy-backend] [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
-2026-07-23T19:17:08.831+05:30  INFO 31920 --- [zippy-backend] [    Test worker] c.z.b.controller.OrderControllerTest     : Started OrderControllerTest in 3.638 seconds (process running for 5.368)
+2026-07-23T19:34:52.158+05:30  INFO 33336 --- [zippy-backend] [    Test worker] c.z.b.controller.OrderControllerTest     : Starting OrderControllerTest using Java 21.0.9 with PID 33336 (started by Rakshan in C:\Projects\Logistics Platform\zippy-backend)
+2026-07-23T19:34:52.161+05:30  INFO 33336 --- [zippy-backend] [    Test worker] c.z.b.controller.OrderControllerTest     : No active profile set, falling back to 1 default profile: "default"
+2026-07-23T19:34:55.232+05:30  INFO 33336 --- [zippy-backend] [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-07-23T19:34:55.233+05:30  INFO 33336 --- [zippy-backend] [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-07-23T19:34:55.237+05:30  INFO 33336 --- [zippy-backend] [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2026-07-23T19:34:55.327+05:30  INFO 33336 --- [zippy-backend] [    Test worker] c.z.b.controller.OrderControllerTest     : Started OrderControllerTest in 3.888 seconds (process running for 8.732)
 ]]></system-out>
-  <system-err><![CDATA[WARNING: A Java agent has been loaded dynamically (C:\Users\Rakshan\.gradle\caches\modules-2\files-2.1\net.bytebuddy\byte-buddy-agent\1.14.16\4a451ee6484abac3a498df0f3b33ed00a6fced4d\byte-buddy-agent-1.14.16.jar)
-WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
-WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
-WARNING: Dynamic loading of agents will be disallowed by default in a future release
-]]></system-err>
+  <system-err><![CDATA[]]></system-err>
 </testsuite>

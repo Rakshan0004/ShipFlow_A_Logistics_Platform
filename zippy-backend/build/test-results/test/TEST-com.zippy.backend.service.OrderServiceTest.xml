@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.zippy.backend.service.OrderServiceTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-07-23T13:47:09" hostname="RAKSHAN-LEGION" time="0.265">
+<testsuite name="com.zippy.backend.service.OrderServiceTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-07-23T14:04:55" hostname="RAKSHAN-LEGION" time="0.037">
   <properties/>
-  <testcase name="shouldRejectOrderWithNegativeWeight()" classname="com.zippy.backend.service.OrderServiceTest" time="0.244"/>
+  <testcase name="shouldRejectOrderWithNegativeWeight()" classname="com.zippy.backend.service.OrderServiceTest" time="0.008"/>
   <testcase name="shouldRejectCodOrderWithZeroCodAmount()" classname="com.zippy.backend.service.OrderServiceTest" time="0.002"/>
   <testcase name="shouldCreateOrderWithGeneratedZippyId()" classname="com.zippy.backend.service.OrderServiceTest" time="0.006"/>
-  <testcase name="shouldReturn404ForNonExistentOrder()" classname="com.zippy.backend.service.OrderServiceTest" time="0.003"/>
-  <testcase name="shouldReturnOrderById()" classname="com.zippy.backend.service.OrderServiceTest" time="0.002"/>
-  <testcase name="shouldRejectCodOrderWithoutCodAmount()" classname="com.zippy.backend.service.OrderServiceTest" time="0.002"/>
-  <testcase name="shouldRejectInvalidPaymentType()" classname="com.zippy.backend.service.OrderServiceTest" time="0.002"/>
+  <testcase name="shouldReturn404ForNonExistentOrder()" classname="com.zippy.backend.service.OrderServiceTest" time="0.004"/>
+  <testcase name="shouldReturnOrderById()" classname="com.zippy.backend.service.OrderServiceTest" time="0.004"/>
+  <testcase name="shouldRejectCodOrderWithoutCodAmount()" classname="com.zippy.backend.service.OrderServiceTest" time="0.003"/>
+  <testcase name="shouldRejectInvalidPaymentType()" classname="com.zippy.backend.service.OrderServiceTest" time="0.003"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>
