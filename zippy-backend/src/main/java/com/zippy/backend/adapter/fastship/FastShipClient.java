@@ -4,8 +4,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zippy.backend.adapter.CourierClient;
 import com.zippy.backend.dto.NormalizedShippingOption;
+import com.zippy.backend.dto.ShipmentCreationResult;
 import com.zippy.backend.exception.CourierUnavailableException;
 import com.zippy.backend.model.Order;
+import com.zippy.backend.model.ShippingQuote;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,6 +42,61 @@ public class FastShipClient implements CourierClient {
     @Override
     public String getCarrierName() {
         return "FastShip";
+    }
+
+    @Override
+    public ShipmentCreationResult createShipment(Order order, ShippingQuote selectedQuote) {
+        String url = baseUrl + "/fastship/api/v1/shipments";
+        FastShipShipmentRequest request = new FastShipShipmentRequest();
+        request.setReferenceNumber(order.getZippyOrderId());
+        request.setServiceCode(selectedQuote.getServiceCode());
+
+        FastShipShipmentRequest.Shipper shipper = new FastShipShipmentRequest.Shipper();
+        shipper.setName("Zippy Merchant");
+        shipper.setPostalCode(order.getPickupPincode());
+        request.setShipper(shipper);
+
+        FastShipShipmentRequest.Consignee consignee = new FastShipShipmentRequest.Consignee();
+        consignee.setName(order.getCustomerName());
+        consignee.setPhone(order.getCustomerPhone());
+        consignee.setPostalCode(order.getDeliveryPincode());
+        request.setConsignee(consignee);
+
+        FastShipShipmentRequest.Parcel parcel = new FastShipShipmentRequest.Parcel();
+        parcel.setWeightKg(order.getWeightGrams() != null ? order.getWeightGrams() / 1000.0 : 0.0);
+        request.setParcel(parcel);
+
+        FastShipShipmentRequest.CodDetail cod = new FastShipShipmentRequest.CodDetail();
+        boolean isCod = "COD".equalsIgnoreCase(order.getPaymentType());
+        cod.setEnabled(isCod);
+        cod.setAmount(order.getCodAmount() != null ? order.getCodAmount() : BigDecimal.ZERO);
+        request.setCod(cod);
+
+        request.setCallbackUrl("http://zippy-backend/api/webhooks/fastship");
+
+        try {
+            FastShipShipmentResponse response = webClient.post()
+                    .uri(url)
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToMono(FastShipShipmentResponse.class)
+                    .block();
+
+            if (response == null || !Boolean.TRUE.equals(response.getSuccess())) {
+                throw new CourierUnavailableException(getCarrierCode(), "Shipment creation returned unsuccessful status");
+            }
+
+            return new ShipmentCreationResult(
+                    getCarrierCode(),
+                    response.getShipmentId(),
+                    response.getTrackingNumber(),
+                    response.getLabelUrl(),
+                    response.getStatus() != null ? response.getStatus() : "BOOKED"
+            );
+        } catch (Exception e) {
+            log.warn("FastShip shipment creation failed: {}", e.getMessage());
+            throw new CourierUnavailableException(getCarrierCode(), e);
+        }
     }
 
     @Override
@@ -157,4 +214,102 @@ public class FastShipClient implements CourierClient {
             public Integer getEstimatedDays() { return estimatedDays; }
         }
     }
+
+    public static class FastShipShipmentRequest {
+        @JsonProperty("reference_number")
+        private String referenceNumber;
+        @JsonProperty("service_code")
+        private String serviceCode;
+        private Shipper shipper;
+        private Consignee consignee;
+        private Parcel parcel;
+        private CodDetail cod;
+        @JsonProperty("callback_url")
+        private String callbackUrl;
+
+        public FastShipShipmentRequest() {}
+
+        public String getReferenceNumber() { return referenceNumber; }
+        public void setReferenceNumber(String referenceNumber) { this.referenceNumber = referenceNumber; }
+        public String getServiceCode() { return serviceCode; }
+        public void setServiceCode(String serviceCode) { this.serviceCode = serviceCode; }
+        public Shipper getShipper() { return shipper; }
+        public void setShipper(Shipper shipper) { this.shipper = shipper; }
+        public Consignee getConsignee() { return consignee; }
+        public void setConsignee(Consignee consignee) { this.consignee = consignee; }
+        public Parcel getParcel() { return parcel; }
+        public void setParcel(Parcel parcel) { this.parcel = parcel; }
+        public CodDetail getCod() { return cod; }
+        public void setCod(CodDetail cod) { this.cod = cod; }
+        public String getCallbackUrl() { return callbackUrl; }
+        public void setCallbackUrl(String callbackUrl) { this.callbackUrl = callbackUrl; }
+
+        public static class Shipper {
+            private String name;
+            @JsonProperty("postal_code")
+            private String postalCode;
+            public Shipper() {}
+            public String getName() { return name; }
+            public void setName(String name) { this.name = name; }
+            public String getPostalCode() { return postalCode; }
+            public void setPostalCode(String postalCode) { this.postalCode = postalCode; }
+        }
+
+        public static class Consignee {
+            private String name;
+            private String phone;
+            @JsonProperty("postal_code")
+            private String postalCode;
+            public Consignee() {}
+            public String getName() { return name; }
+            public void setName(String name) { this.name = name; }
+            public String getPhone() { return phone; }
+            public void setPhone(String phone) { this.phone = phone; }
+            public String getPostalCode() { return postalCode; }
+            public void setPostalCode(String postalCode) { this.postalCode = postalCode; }
+        }
+
+        public static class Parcel {
+            @JsonProperty("weight_kg")
+            private Double weightKg;
+            public Parcel() {}
+            public Double getWeightKg() { return weightKg; }
+            public void setWeightKg(Double weightKg) { this.weightKg = weightKg; }
+        }
+
+        public static class CodDetail {
+            private Boolean enabled;
+            private BigDecimal amount;
+            public CodDetail() {}
+            public Boolean getEnabled() { return enabled; }
+            public void setEnabled(Boolean enabled) { this.enabled = enabled; }
+            public BigDecimal getAmount() { return amount; }
+            public void setAmount(BigDecimal amount) { this.amount = amount; }
+        }
+    }
+
+    public static class FastShipShipmentResponse {
+        private Boolean success;
+        @JsonProperty("shipment_id")
+        private String shipmentId;
+        @JsonProperty("tracking_number")
+        private String trackingNumber;
+        @JsonProperty("label_url")
+        private String labelUrl;
+        private String status;
+
+        public FastShipShipmentResponse() {}
+
+        public Boolean getSuccess() { return success; }
+        public void setSuccess(Boolean success) { this.success = success; }
+        public String getShipmentId() { return shipmentId; }
+        public void setShipmentId(String shipmentId) { this.shipmentId = shipmentId; }
+        public String getTrackingNumber() { return trackingNumber; }
+        public void setTrackingNumber(String trackingNumber) { this.trackingNumber = trackingNumber; }
+        public String getLabelUrl() { return labelUrl; }
+        public void setLabelUrl(String labelUrl) { this.labelUrl = labelUrl; }
+        public String getStatus() { return status; }
+        public void setStatus(String status) { this.status = status; }
+    }
 }
+

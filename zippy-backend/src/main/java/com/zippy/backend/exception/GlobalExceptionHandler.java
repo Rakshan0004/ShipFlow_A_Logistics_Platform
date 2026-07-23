@@ -37,6 +37,24 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
+    @ExceptionHandler(PriceMismatchException.class)
+    public ResponseEntity<ErrorResponse> handlePriceMismatch(PriceMismatchException ex) {
+        ErrorResponse response = new ErrorResponse("PRICE_MISMATCH", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
+    }
+
+    @ExceptionHandler(IllegalStateTransitionException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalStateTransition(IllegalStateTransitionException ex) {
+        ErrorResponse response = new ErrorResponse("INVALID_STATE", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    @ExceptionHandler(CourierShipmentCreationException.class)
+    public ResponseEntity<ErrorResponse> handleCourierShipmentCreation(CourierShipmentCreationException ex) {
+        ErrorResponse response = new ErrorResponse("COURIER_ERROR", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(response);
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
         ErrorResponse response = new ErrorResponse("INVALID_ARGUMENT", ex.getMessage());

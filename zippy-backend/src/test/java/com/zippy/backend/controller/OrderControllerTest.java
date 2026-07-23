@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zippy.backend.dto.*;
 import com.zippy.backend.exception.GlobalExceptionHandler;
 import com.zippy.backend.exception.OrderNotFoundException;
+import com.zippy.backend.service.CarrierSelectionService;
 import com.zippy.backend.service.OrderService;
+import com.zippy.backend.service.ShipmentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +36,12 @@ class OrderControllerTest {
 
     @MockBean
     private OrderService orderService;
+
+    @MockBean
+    private CarrierSelectionService carrierSelectionService;
+
+    @MockBean
+    private ShipmentService shipmentService;
 
     private CreateOrderRequest validRequest;
     private OrderResponse mockResponse;
@@ -95,4 +103,35 @@ class OrderControllerTest {
                 .andExpect(jsonPath("$.error").value("NOT_FOUND"))
                 .andExpect(jsonPath("$.message").value("Order not found: ZPY-ORD-99999"));
     }
+
+    @Test
+    void shouldSelectCarrierSuccessfully() throws Exception {
+        SelectCarrierRequest selectRequest = new SelectCarrierRequest("FASTSHIP", "FAST-AIR", new BigDecimal("182.90"));
+        SelectCarrierResponse selectResponse = new SelectCarrierResponse("ZPY-ORD-10001", "CARRIER_SELECTED",
+                new SelectCarrierResponse.SelectedCarrierDetail("FASTSHIP", "FAST-AIR", "FastShip Air Express", new BigDecimal("182.90"), null));
+
+        when(carrierSelectionService.selectCarrier(any(), any())).thenReturn(selectResponse);
+
+        mockMvc.perform(post("/api/orders/ZPY-ORD-10001/select-carrier")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(selectRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.orderId").value("ZPY-ORD-10001"))
+                .andExpect(jsonPath("$.orderStatus").value("CARRIER_SELECTED"));
+    }
+
+    @Test
+    void shouldCreateShipmentSuccessfully() throws Exception {
+        ShipmentResponse shipmentResponse = new ShipmentResponse("ZPY-ORD-10001", "SHIPMENT_CREATED",
+                new ShipmentResponse.ShipmentDetail("FASTSHIP", "FS-700001", "FST123456789", "FAST-AIR", new BigDecimal("182.90"), "SHIPMENT_CREATED", null));
+
+        when(shipmentService.createShipment("ZPY-ORD-10001")).thenReturn(shipmentResponse);
+
+        mockMvc.perform(post("/api/orders/ZPY-ORD-10001/create-shipment"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.orderId").value("ZPY-ORD-10001"))
+                .andExpect(jsonPath("$.orderStatus").value("SHIPMENT_CREATED"))
+                .andExpect(jsonPath("$.shipment.trackingNumber").value("FST123456789"));
+    }
 }
+

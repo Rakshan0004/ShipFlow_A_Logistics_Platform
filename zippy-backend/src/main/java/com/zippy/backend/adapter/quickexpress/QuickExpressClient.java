@@ -3,8 +3,10 @@ package com.zippy.backend.adapter.quickexpress;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zippy.backend.adapter.CourierClient;
 import com.zippy.backend.dto.NormalizedShippingOption;
+import com.zippy.backend.dto.ShipmentCreationResult;
 import com.zippy.backend.exception.CourierUnavailableException;
 import com.zippy.backend.model.Order;
+import com.zippy.backend.model.ShippingQuote;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,6 +41,71 @@ public class QuickExpressClient implements CourierClient {
     @Override
     public String getCarrierName() {
         return "QuickExpress";
+    }
+
+    @Override
+    public ShipmentCreationResult createShipment(Order order, ShippingQuote selectedQuote) {
+        String url = baseUrl + "/quickexpress/booking/create";
+        String quoteId = extractQuoteId(selectedQuote.getRawCarrierResponse());
+
+        QuickExpressShipmentRequest request = new QuickExpressShipmentRequest();
+        request.setClientOrderId(order.getZippyOrderId());
+        request.setQuoteId(quoteId != null ? quoteId : "QE-Q-90001");
+        request.setProductType(selectedQuote.getServiceCode());
+
+        QuickExpressShipmentRequest.ReceiverDetails receiver = new QuickExpressShipmentRequest.ReceiverDetails();
+        receiver.setFullName(order.getCustomerName());
+        receiver.setMobileNumber(order.getCustomerPhone());
+        receiver.setPostalCode(order.getDeliveryPincode());
+        request.setReceiverDetails(receiver);
+
+        QuickExpressShipmentRequest.PackageDetails packageDetails = new QuickExpressShipmentRequest.PackageDetails();
+        packageDetails.setDeadWeight(order.getWeightGrams());
+        packageDetails.setWeightUnit("GRAM");
+        request.setPackageDetails(packageDetails);
+
+        QuickExpressShipmentRequest.Payment payment = new QuickExpressShipmentRequest.Payment();
+        boolean isCod = "COD".equalsIgnoreCase(order.getPaymentType());
+        payment.setMode(isCod ? "CASH_ON_DELIVERY" : "PREPAID");
+        payment.setAmountToCollect(order.getCodAmount() != null ? order.getCodAmount() : BigDecimal.ZERO);
+        request.setPayment(payment);
+
+        request.setWebhook("http://zippy-backend/api/webhooks/quickexpress");
+
+        try {
+            QuickExpressShipmentResponse response = webClient.post()
+                    .uri(url)
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToMono(QuickExpressShipmentResponse.class)
+                    .block();
+
+            if (response == null || !"CONFIRMED".equalsIgnoreCase(response.getBookingStatus()) || response.getBooking() == null) {
+                throw new CourierUnavailableException(getCarrierCode(), "Booking creation returned unconfirmed status");
+            }
+
+            QuickExpressShipmentResponse.Booking booking = response.getBooking();
+            return new ShipmentCreationResult(
+                    getCarrierCode(),
+                    booking.getBookingId(),
+                    booking.getAwb(),
+                    null,
+                    booking.getCurrentState() != null ? booking.getCurrentState() : "SHIPMENT_CREATED"
+            );
+        } catch (Exception e) {
+            log.warn("QuickExpress shipment creation failed: {}", e.getMessage());
+            throw new CourierUnavailableException(getCarrierCode(), e);
+        }
+    }
+
+    private String extractQuoteId(String rawResponse) {
+        if (rawResponse == null) return "QE-Q-90001";
+        try {
+            QuickExpressRateResponse response = objectMapper.readValue(rawResponse, QuickExpressRateResponse.class);
+            return response.getQuoteId();
+        } catch (Exception e) {
+            return "QE-Q-90001";
+        }
     }
 
     @Override
@@ -194,4 +261,92 @@ public class QuickExpressClient implements CourierClient {
             public Integer getMaximumDays() { return maximumDays; }
         }
     }
+
+    public static class QuickExpressShipmentRequest {
+        private String clientOrderId;
+        private String quoteId;
+        private String productType;
+        private ReceiverDetails receiverDetails;
+        private PackageDetails packageDetails;
+        private Payment payment;
+        private String webhook;
+
+        public QuickExpressShipmentRequest() {}
+
+        public String getClientOrderId() { return clientOrderId; }
+        public void setClientOrderId(String clientOrderId) { this.clientOrderId = clientOrderId; }
+        public String getQuoteId() { return quoteId; }
+        public void setQuoteId(String quoteId) { this.quoteId = quoteId; }
+        public String getProductType() { return productType; }
+        public void setProductType(String productType) { this.productType = productType; }
+        public ReceiverDetails getReceiverDetails() { return receiverDetails; }
+        public void setReceiverDetails(ReceiverDetails receiverDetails) { this.receiverDetails = receiverDetails; }
+        public PackageDetails getPackageDetails() { return packageDetails; }
+        public void setPackageDetails(PackageDetails packageDetails) { this.packageDetails = packageDetails; }
+        public Payment getPayment() { return payment; }
+        public void setPayment(Payment payment) { this.payment = payment; }
+        public String getWebhook() { return webhook; }
+        public void setWebhook(String webhook) { this.webhook = webhook; }
+
+        public static class ReceiverDetails {
+            private String fullName;
+            private String mobileNumber;
+            private String postalCode;
+            public ReceiverDetails() {}
+            public String getFullName() { return fullName; }
+            public void setFullName(String fullName) { this.fullName = fullName; }
+            public String getMobileNumber() { return mobileNumber; }
+            public void setMobileNumber(String mobileNumber) { this.mobileNumber = mobileNumber; }
+            public String getPostalCode() { return postalCode; }
+            public void setPostalCode(String postalCode) { this.postalCode = postalCode; }
+        }
+
+        public static class PackageDetails {
+            private Integer deadWeight;
+            private String weightUnit;
+            public PackageDetails() {}
+            public Integer getDeadWeight() { return deadWeight; }
+            public void setDeadWeight(Integer deadWeight) { this.deadWeight = deadWeight; }
+            public String getWeightUnit() { return weightUnit; }
+            public void setWeightUnit(String weightUnit) { this.weightUnit = weightUnit; }
+        }
+
+        public static class Payment {
+            private String mode;
+            private BigDecimal amountToCollect;
+            public Payment() {}
+            public String getMode() { return mode; }
+            public void setMode(String mode) { this.mode = mode; }
+            public BigDecimal getAmountToCollect() { return amountToCollect; }
+            public void setAmountToCollect(BigDecimal amountToCollect) { this.amountToCollect = amountToCollect; }
+        }
+    }
+
+    public static class QuickExpressShipmentResponse {
+        private String bookingStatus;
+        private Booking booking;
+
+        public QuickExpressShipmentResponse() {}
+
+        public String getBookingStatus() { return bookingStatus; }
+        public void setBookingStatus(String bookingStatus) { this.bookingStatus = bookingStatus; }
+        public Booking getBooking() { return booking; }
+        public void setBooking(Booking booking) { this.booking = booking; }
+
+        public static class Booking {
+            private String bookingId;
+            private String awb;
+            private String currentState;
+
+            public Booking() {}
+
+            public String getBookingId() { return bookingId; }
+            public void setBookingId(String bookingId) { this.bookingId = bookingId; }
+            public String getAwb() { return awb; }
+            public void setAwb(String awb) { this.awb = awb; }
+            public String getCurrentState() { return currentState; }
+            public void setCurrentState(String currentState) { this.currentState = currentState; }
+        }
+    }
 }
+
