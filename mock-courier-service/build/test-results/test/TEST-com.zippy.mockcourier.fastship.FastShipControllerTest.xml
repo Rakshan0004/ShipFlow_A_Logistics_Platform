@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.zippy.mockcourier.fastship.FastShipControllerTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-07-23T13:54:23" hostname="RAKSHAN-LEGION" time="0.104">
+  <properties/>
+  <testcase name="shouldReturnFastShipRate()" classname="com.zippy.mockcourier.fastship.FastShipControllerTest" time="0.051"/>
+  <testcase name="shouldReturn500WhenFailParamSetOnRate()" classname="com.zippy.mockcourier.fastship.FastShipControllerTest" time="0.007"/>
+  <testcase name="shouldCreateFastShipShipment()" classname="com.zippy.mockcourier.fastship.FastShipControllerTest" time="0.04"/>
+  <system-out><![CDATA[2026-07-23T19:24:22.662+05:30  INFO 17560 --- [mock-courier-service] [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.zippy.mockcourier.fastship.FastShipControllerTest]: FastShipControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-07-23T19:24:22.684+05:30  INFO 17560 --- [mock-courier-service] [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.zippy.mockcourier.MockCourierApplication for test class com.zippy.mockcourier.fastship.FastShipControllerTest
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.3.0)
+
+2026-07-23T19:24:22.720+05:30  INFO 17560 --- [mock-courier-service] [    Test worker] c.z.m.fastship.FastShipControllerTest    : Starting FastShipControllerTest using Java 21.0.9 with PID 17560 (started by Rakshan in C:\Projects\Logistics Platform\mock-courier-service)
+2026-07-23T19:24:22.721+05:30  INFO 17560 --- [mock-courier-service] [    Test worker] c.z.m.fastship.FastShipControllerTest    : No active profile set, falling back to 1 default profile: "default"
+2026-07-23T19:24:23.019+05:30  INFO 17560 --- [mock-courier-service] [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-07-23T19:24:23.020+05:30  INFO 17560 --- [mock-courier-service] [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-07-23T19:24:23.021+05:30  INFO 17560 --- [mock-courier-service] [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2026-07-23T19:24:23.029+05:30  INFO 17560 --- [mock-courier-service] [    Test worker] c.z.m.fastship.FastShipControllerTest    : Started FastShipControllerTest in 0.341 seconds (process running for 7.165)
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

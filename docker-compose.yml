@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: zippy-postgres
+    environment:
+      POSTGRES_DB: zippydb
+      POSTGRES_USER: zippy
+      POSTGRES_PASSWORD: zippy
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zippy -d zippydb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  zippy-backend:
+    build:
+      context: .
+      dockerfile: zippy-backend/Dockerfile
+    container_name: zippy-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mock-courier-service:
+        condition: service_started
+
+  mock-courier-service:
+    build:
+      context: .
+      dockerfile: mock-courier-service/Dockerfile
+    container_name: mock-courier-service
+    ports:
+      - "8081:8081"
+
+  zippy-frontend:
+    build:
+      context: ./zippy-frontend
+      dockerfile: Dockerfile
+    container_name: zippy-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - zippy-backend
+
+volumes:
+  postgres_data:

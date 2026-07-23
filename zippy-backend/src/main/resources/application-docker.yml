@@ -1,0 +1,16 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/zippydb
+    username: zippy
+    password: zippy
+
+couriers:
+  fastship:
+    base-url: http://mock-courier-service:8081
+  quickexpress:
+    base-url: http://mock-courier-service:8081
+  reliable:
+    base-url: http://mock-courier-service:8081

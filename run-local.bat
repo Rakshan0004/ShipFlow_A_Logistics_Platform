@@ -1,0 +1,19 @@
+@echo off
+echo Starting Zippy Logistics Platform Locally...
+
+echo Starting PostgreSQL via Docker...
+docker compose up postgres -d
+
+echo Build Gradle project...
+call gradlew.bat build -x test
+
+echo Starting Zippy Backend on port 8080...
+start "Zippy Backend" gradlew.bat :zippy-backend:bootRun
+
+echo Starting Mock Courier Service on port 8081...
+start "Mock Courier Service" gradlew.bat :mock-courier-service:bootRun
+
+echo Starting Frontend on port 3000...
+cd zippy-frontend
+npm install
+npm run dev
