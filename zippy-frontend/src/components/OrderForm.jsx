@@ -1,25 +1,44 @@
 import React, { useState } from 'react';
 
+const SAMPLE_NAMES = [
+  'Rahul Sharma', 'Priya Verma', 'Ananya Iyer', 'Vikram Malhotra',
+  'Sneha Patel', 'Karan Mehta', 'Rohan Gupta', 'Deepika Roy', 'Amitabh Das'
+];
+
+const PICKUP_LOCATIONS = [
+  { city: 'Bengaluru', state: 'Karnataka', pincode: '560001', addr: '15 MG Road' },
+  { city: 'Mumbai', state: 'Maharashtra', pincode: '400001', addr: '45 Nariman Point' },
+  { city: 'Hyderabad', state: 'Telangana', pincode: '500001', addr: '12 Jubilee Hills' },
+  { city: 'Pune', state: 'Maharashtra', pincode: '411001', addr: '88 FC Road' }
+];
+
+const DELIVERY_LOCATIONS = [
+  { city: 'New Delhi', state: 'Delhi', pincode: '110001', addr: '22 Connaught Place' },
+  { city: 'Chennai', state: 'Tamil Nadu', pincode: '600001', addr: '88 Anna Salai' },
+  { city: 'Kolkata', state: 'West Bengal', pincode: '700001', addr: '10 Park Street' },
+  { city: 'Ahmedabad', state: 'Gujarat', pincode: '380001', addr: '34 CG Road' }
+];
+
 export default function OrderForm({ onOrderCreated, loading }) {
   const [formData, setFormData] = useState({
-    merchantOrderId: 'MERCHANT-' + Math.floor(10000 + Math.random() * 90000),
-    customerName: 'Rahul Sharma',
-    customerPhone: '9876543210',
-    customerEmail: 'rahul@example.com',
-    pickupAddressLine1: '15 MG Road',
-    pickupCity: 'Bengaluru',
-    pickupState: 'Karnataka',
-    pickupPincode: '560001',
-    deliveryAddressLine1: '22 Connaught Place',
-    deliveryCity: 'New Delhi',
-    deliveryState: 'Delhi',
-    deliveryPincode: '110001',
-    weightGrams: 1500,
-    lengthCm: 20,
-    widthCm: 15,
-    heightCm: 10,
+    merchantOrderId: '',
+    customerName: '',
+    customerPhone: '',
+    customerEmail: '',
+    pickupAddressLine1: '',
+    pickupCity: '',
+    pickupState: '',
+    pickupPincode: '',
+    deliveryAddressLine1: '',
+    deliveryCity: '',
+    deliveryState: '',
+    deliveryPincode: '',
+    weightGrams: '',
+    lengthCm: '',
+    widthCm: '',
+    heightCm: '',
     paymentType: 'COD',
-    codAmount: 2500.00
+    codAmount: ''
   });
 
   const handleChange = (e) => {
@@ -33,25 +52,35 @@ export default function OrderForm({ onOrderCreated, loading }) {
   };
 
   const handleFillSample = () => {
+    const randomName = SAMPLE_NAMES[Math.floor(Math.random() * SAMPLE_NAMES.length)];
+    const randomPhone = '98' + Math.floor(10000000 + Math.random() * 90000000);
+    const randomEmail = randomName.toLowerCase().replace(' ', '.') + Math.floor(10 + Math.random() * 90) + '@example.com';
+    
+    const pickup = PICKUP_LOCATIONS[Math.floor(Math.random() * PICKUP_LOCATIONS.length)];
+    const delivery = DELIVERY_LOCATIONS[Math.floor(Math.random() * DELIVERY_LOCATIONS.length)];
+
+    const randomWeight = (Math.floor(5 + Math.random() * 30) * 100); // 500g to 3500g
+    const randomCod = (Math.floor(5 + Math.random() * 45) * 100); // ₹500 to ₹5000
+
     setFormData({
       merchantOrderId: 'MERCHANT-' + Math.floor(10000 + Math.random() * 90000),
-      customerName: 'Priya Verma',
-      customerPhone: '9812345678',
-      customerEmail: 'priya@example.com',
-      pickupAddressLine1: '100 Feet Road, Indiranagar',
-      pickupCity: 'Bengaluru',
-      pickupState: 'Karnataka',
-      pickupPincode: '560038',
-      deliveryAddressLine1: 'Bandra West',
-      deliveryCity: 'Mumbai',
-      deliveryState: 'Maharashtra',
-      deliveryPincode: '400050',
-      weightGrams: 1200,
-      lengthCm: 25,
-      widthCm: 18,
-      heightCm: 12,
+      customerName: randomName,
+      customerPhone: randomPhone,
+      customerEmail: randomEmail,
+      pickupAddressLine1: pickup.addr,
+      pickupCity: pickup.city,
+      pickupState: pickup.state,
+      pickupPincode: pickup.pincode,
+      deliveryAddressLine1: delivery.addr,
+      deliveryCity: delivery.city,
+      deliveryState: delivery.state,
+      deliveryPincode: delivery.pincode,
+      weightGrams: randomWeight,
+      lengthCm: 20,
+      widthCm: 15,
+      heightCm: 10,
       paymentType: 'COD',
-      codAmount: 1850.00
+      codAmount: randomCod
     });
   };
 
@@ -78,9 +107,9 @@ export default function OrderForm({ onOrderCreated, loading }) {
       },
       package: {
         weightGrams: Number(formData.weightGrams),
-        lengthCm: Number(formData.lengthCm),
-        widthCm: Number(formData.widthCm),
-        heightCm: Number(formData.heightCm)
+        lengthCm: Number(formData.lengthCm || 10),
+        widthCm: Number(formData.widthCm || 10),
+        heightCm: Number(formData.heightCm || 10)
       },
       paymentType: formData.paymentType,
       codAmount: formData.paymentType === 'COD' ? Number(formData.codAmount) : null
@@ -94,7 +123,7 @@ export default function OrderForm({ onOrderCreated, loading }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
         <h2 className="card-title">📦 Create New Order</h2>
         <button type="button" className="btn-secondary" onClick={handleFillSample}>
-          ⚡ Auto-Fill Sample Data
+          ⚡ Auto-Fill Sample Data (Randomized)
         </button>
       </div>
 
@@ -108,6 +137,7 @@ export default function OrderForm({ onOrderCreated, loading }) {
               className="form-control"
               value={formData.merchantOrderId}
               onChange={handleChange}
+              placeholder="e.g. MERCHANT-10001"
               required
             />
           </div>
@@ -120,6 +150,7 @@ export default function OrderForm({ onOrderCreated, loading }) {
               className="form-control"
               value={formData.customerName}
               onChange={handleChange}
+              placeholder="e.g. Rahul Sharma"
               required
             />
           </div>
@@ -132,6 +163,7 @@ export default function OrderForm({ onOrderCreated, loading }) {
               className="form-control"
               value={formData.customerPhone}
               onChange={handleChange}
+              placeholder="e.g. 9876543210"
               required
             />
           </div>
@@ -144,11 +176,12 @@ export default function OrderForm({ onOrderCreated, loading }) {
               className="form-control"
               value={formData.customerEmail}
               onChange={handleChange}
+              placeholder="e.g. rahul@example.com"
             />
           </div>
 
           <div className="form-group">
-            <label>Pickup Pincode</label>
+            <label>Pickup Pincode (6 digits)</label>
             <input
               type="text"
               name="pickupPincode"
@@ -161,7 +194,7 @@ export default function OrderForm({ onOrderCreated, loading }) {
           </div>
 
           <div className="form-group">
-            <label>Delivery Pincode</label>
+            <label>Delivery Pincode (6 digits)</label>
             <input
               type="text"
               name="deliveryPincode"
@@ -181,6 +214,7 @@ export default function OrderForm({ onOrderCreated, loading }) {
               className="form-control"
               value={formData.weightGrams}
               onChange={handleChange}
+              placeholder="e.g. 1500"
               min="1"
               required
             />
@@ -208,6 +242,7 @@ export default function OrderForm({ onOrderCreated, loading }) {
                 className="form-control"
                 value={formData.codAmount}
                 onChange={handleChange}
+                placeholder="e.g. 2500"
                 min="1"
                 required
               />

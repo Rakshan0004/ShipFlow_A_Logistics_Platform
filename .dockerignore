@@ -1,0 +1,71 @@
+# Node modules
+**/node_modules
+**/npm-debug.log
+**/.npm
+
+# Build outputs
+**/build
+**/dist
+**/target
+**/.gradle
+**/out
+
+# IDE
+**/.idea
+**/.vscode
+**/*.iml
+**/.project
+**/.classpath
+**/.settings
+
+# Git
+**/.git
+**/.gitignore
+**/.gitattributes
+
+# Documentation
+**/*.md
+!**/README.md
+
+# Test files
+**/test
+**/tests
+**/__tests__
+**/*.test.js
+**/*.spec.js
+
+# Environment
+**/.env
+**/.env.*
+
+# Logs
+**/logs
+**/*.log
+
+# OS
+**/.DS_Store
+**/Thumbs.db
+
+# Temporary files
+**/tmp
+**/temp
+**/*.tmp
+**/*.swp
+**/*.swo
+
+# Docker
+**/Dockerfile
+**/docker-compose.yml
+**/.dockerignore
+
+# Postman
+**/postman
+
+# Scratch/planning
+**/scratch
+**/project_planning_promt.md
+**/*.docx
+**/*.pdf
+
+# Kiro
+**/.kiro

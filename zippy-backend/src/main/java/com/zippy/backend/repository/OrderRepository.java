@@ -10,6 +10,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     Optional<Order> findByZippyOrderId(String zippyOrderId);
 
+    Optional<Order> findFirstByMerchantOrderIdOrderByIdDesc(String merchantOrderId);
+
     boolean existsByMerchantOrderId(String merchantOrderId);
 
     Optional<Order> findTopByOrderByIdDesc();

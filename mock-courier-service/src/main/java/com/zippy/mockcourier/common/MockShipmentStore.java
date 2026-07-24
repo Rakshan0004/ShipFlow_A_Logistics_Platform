@@ -23,15 +23,15 @@ public class MockShipmentStore {
     private final Map<String, MockShipmentRecord> storeByTracking = new ConcurrentHashMap<>();
     private final Map<String, MockShipmentRecord> storeByShipmentId = new ConcurrentHashMap<>();
 
-    private final AtomicLong fastShipSeq = new AtomicLong(700001L);
-    private final AtomicLong fastShipTrackingSeq = new AtomicLong(123456789L);
+    private final AtomicLong fastShipSeq = new AtomicLong(System.currentTimeMillis() % 1000000L);
+    private final AtomicLong fastShipTrackingSeq = new AtomicLong((System.currentTimeMillis() % 100000000L) + (long)(Math.random() * 1000));
 
-    private final AtomicLong quickExpressSeq = new AtomicLong(800001L);
-    private final AtomicLong quickExpressAwbSeq = new AtomicLong(987654321L);
-    private final AtomicLong quickExpressQuoteSeq = new AtomicLong(90001L);
+    private final AtomicLong quickExpressSeq = new AtomicLong(System.currentTimeMillis() % 1000000L);
+    private final AtomicLong quickExpressAwbSeq = new AtomicLong((System.currentTimeMillis() % 100000000L) + (long)(Math.random() * 1000));
+    private final AtomicLong quickExpressQuoteSeq = new AtomicLong(System.currentTimeMillis() % 100000L);
 
-    private final AtomicLong reliableSeq = new AtomicLong(600001L);
-    private final AtomicLong reliableTrackingSeq = new AtomicLong(1122334455L);
+    private final AtomicLong reliableSeq = new AtomicLong(System.currentTimeMillis() % 1000000L);
+    private final AtomicLong reliableTrackingSeq = new AtomicLong((System.currentTimeMillis() % 100000000L) + (long)(Math.random() * 1000));
 
     public MockShipmentRecord createFastShipment(String orderReference, String serviceCode, String callbackUrl) {
         String shipmentId = "FS-" + fastShipSeq.getAndIncrement();
@@ -76,5 +76,14 @@ public class MockShipmentStore {
 
     public Optional<MockShipmentRecord> findByShipmentId(String shipmentId) {
         return Optional.ofNullable(storeByShipmentId.get(shipmentId));
+    }
+
+    public void save(MockShipmentRecord record) {
+        if (record.trackingNumber() != null) {
+            storeByTracking.put(record.trackingNumber(), record);
+        }
+        if (record.shipmentId() != null) {
+            storeByShipmentId.put(record.shipmentId(), record);
+        }
     }
 }

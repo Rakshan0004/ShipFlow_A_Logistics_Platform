@@ -1,5 +1,8 @@
 package com.zippy.backend.exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -12,6 +15,8 @@ import java.util.Map;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(OrderNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleOrderNotFound(OrderNotFoundException ex) {
@@ -55,6 +60,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(response);
     }
 
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        log.warn("Database DataIntegrityViolationException: {}", ex.getMessage());
+        String msg = "A database constraint or duplicate record error occurred. Please retry.";
+        if (ex.getMessage() != null && ex.getMessage().contains("shipments_tracking_number_key")) {
+            msg = "A shipment with this tracking number already exists. Please retry with a new shipment.";
+        }
+        ErrorResponse response = new ErrorResponse("DUPLICATE_RECORD", msg);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
         ErrorResponse response = new ErrorResponse("INVALID_ARGUMENT", ex.getMessage());
@@ -63,7 +79,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneralException(Exception ex) {
-        ErrorResponse response = new ErrorResponse("INTERNAL_SERVER_ERROR", ex.getMessage());
+        log.error("Unhandled Exception: ", ex);
+        String userFriendlyMsg = ex.getMessage();
+        if (userFriendlyMsg != null && (userFriendlyMsg.contains("could not execute statement") || userFriendlyMsg.contains("SQL"))) {
+            userFriendlyMsg = "An unexpected database operation error occurred. Please try again.";
+        }
+        ErrorResponse response = new ErrorResponse("INTERNAL_SERVER_ERROR", userFriendlyMsg != null ? userFriendlyMsg : "An internal error occurred.");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 }

@@ -70,7 +70,7 @@ public class QuickExpressClient implements CourierClient {
         payment.setAmountToCollect(order.getCodAmount() != null ? order.getCodAmount() : BigDecimal.ZERO);
         request.setPayment(payment);
 
-        request.setWebhook("http://zippy-backend/api/webhooks/quickexpress");
+        request.setWebhook("http://zippy-backend:8080/api/webhooks/quickexpress");
 
         try {
             QuickExpressShipmentResponse response = webClient.post()

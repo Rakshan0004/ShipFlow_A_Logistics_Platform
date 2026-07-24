@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/orders/{orderId}/rates")
+@CrossOrigin(origins = "*")
 public class RateController {
 
     private final RateAggregationService rateAggregationService;

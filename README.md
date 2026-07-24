@@ -86,22 +86,42 @@ Zippy is an enterprise-grade multi-courier logistics aggregator platform designe
 
 ## 💻 Quick Start & Running Locally
 
-### Option 1: Running via Docker Compose (Recommended)
+### 🐳 Option 1: Running via Docker Compose (Recommended)
 
-To launch the complete stack (PostgreSQL, Zippy Backend, Mock Courier Service, and React Frontend):
+**The fastest way to run the complete platform:**
 
 ```bash
+# Windows
+docker-start.bat
+
+# Or use docker-compose directly
 docker-compose up --build
 ```
 
-Access Points:
-- **Merchant Dashboard**: `http://localhost:3000`
-- **Zippy Backend API**: `http://localhost:8080`
-- **Mock Courier Service**: `http://localhost:8081`
+**Wait 1-2 minutes for all services to start, then access:**
+- **Frontend Dashboard**: http://localhost:3000
+- **Backend API**: http://localhost:8080/api
+- **Mock Courier Service**: http://localhost:8081
+- **Database**: localhost:5432 (user: zippy, password: zippy, db: zippydb)
+
+**Stop all services:**
+```bash
+# Windows
+docker-stop.bat
+
+# Or use docker-compose directly
+docker-compose down
+```
+
+📖 **Detailed Docker Guide**: See [DOCKER_SETUP.md](DOCKER_SETUP.md) for comprehensive configuration, troubleshooting, and production considerations.
+
+📖 **Quick Reference**: See [QUICK_START.md](QUICK_START.md) for feature testing and common tasks.
 
 ---
 
-### Option 2: Running Locally Without Docker
+### 🔧 Option 2: Running Locally Without Docker (Development)
+
+For active development with hot-reload:
 
 1. **Start Local PostgreSQL Database**:
    Ensure PostgreSQL is running locally on port `5432` with database `zippy_db`, user `zippy_user`, and password `zippy_password`.

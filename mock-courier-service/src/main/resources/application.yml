@@ -4,3 +4,12 @@ server:
 spring:
   application:
     name: mock-courier-service
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized

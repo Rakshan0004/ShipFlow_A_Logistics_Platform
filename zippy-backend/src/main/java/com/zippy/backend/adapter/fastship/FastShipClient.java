@@ -72,7 +72,7 @@ public class FastShipClient implements CourierClient {
         cod.setAmount(order.getCodAmount() != null ? order.getCodAmount() : BigDecimal.ZERO);
         request.setCod(cod);
 
-        request.setCallbackUrl("http://zippy-backend/api/webhooks/fastship");
+        request.setCallbackUrl("http://zippy-backend:8080/api/webhooks/fastship");
 
         try {
             FastShipShipmentResponse response = webClient.post()

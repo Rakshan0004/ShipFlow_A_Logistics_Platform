@@ -12,6 +12,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/mock/shipments")
+@CrossOrigin(origins = "*")
 public class MockStatusTriggerController {
 
     private static final Logger log = LoggerFactory.getLogger(MockStatusTriggerController.class);
@@ -32,19 +33,39 @@ public class MockStatusTriggerController {
             @RequestBody Map<String, String> request) {
 
         String trackingNumber = request.get("trackingNumber");
-        if (trackingNumber == null) {
+        if (trackingNumber == null || trackingNumber.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("error", "trackingNumber is required"));
         }
 
         var opt = mockShipmentStore.findByTracking(trackingNumber);
-        if (opt.isEmpty()) {
-            return ResponseEntity.notFound().build();
+        MockShipmentStore.MockShipmentRecord record;
+        if (opt.isPresent()) {
+            record = opt.get();
+        } else {
+            record = new MockShipmentStore.MockShipmentRecord(
+                    carrierId.toUpperCase(),
+                    "FS-" + trackingNumber,
+                    trackingNumber,
+                    "ZPY-REF-100",
+                    "STANDARD",
+                    "SHIPMENT_CREATED",
+                    null
+            );
         }
 
-        var currentRecord = opt.get();
-        String nextStatus = getNextStatus(currentRecord.carrierCode(), currentRecord.currentStatus());
+        String nextStatus = getNextStatus(record.carrierCode(), record.currentStatus());
+        MockShipmentStore.MockShipmentRecord updatedRecord = new MockShipmentStore.MockShipmentRecord(
+                record.carrierCode(),
+                record.shipmentId(),
+                record.trackingNumber(),
+                record.orderReference(),
+                record.serviceCode(),
+                nextStatus,
+                record.callbackUrl()
+        );
+        mockShipmentStore.save(updatedRecord);
 
-        return sendWebhook(currentRecord, nextStatus);
+        return sendWebhook(updatedRecord, nextStatus);
     }
 
     @PostMapping("/{carrierId}/set-status")
@@ -60,36 +81,67 @@ public class MockStatusTriggerController {
         }
 
         var opt = mockShipmentStore.findByTracking(trackingNumber);
-        if (opt.isEmpty()) {
-            return ResponseEntity.notFound().build();
+        MockShipmentStore.MockShipmentRecord record;
+        if (opt.isPresent()) {
+            record = opt.get();
+        } else {
+            record = new MockShipmentStore.MockShipmentRecord(
+                    carrierId.toUpperCase(),
+                    "FS-" + trackingNumber,
+                    trackingNumber,
+                    "ZPY-REF-100",
+                    "STANDARD",
+                    status,
+                    null
+            );
         }
 
-        return sendWebhook(opt.get(), status);
+        MockShipmentStore.MockShipmentRecord updatedRecord = new MockShipmentStore.MockShipmentRecord(
+                record.carrierCode(),
+                record.shipmentId(),
+                record.trackingNumber(),
+                record.orderReference(),
+                record.serviceCode(),
+                status,
+                record.callbackUrl()
+        );
+        mockShipmentStore.save(updatedRecord);
+
+        return sendWebhook(updatedRecord, status);
     }
 
     private ResponseEntity<?> sendWebhook(MockShipmentStore.MockShipmentRecord record, String targetStatus) {
         String callbackUrl = record.callbackUrl();
         if (callbackUrl == null || callbackUrl.isBlank()) {
+            String backendHost = System.getenv("ZIPPY_BACKEND_HOST");
+            if (backendHost == null || backendHost.isBlank()) {
+                backendHost = "localhost";
+            }
             callbackUrl = switch (record.carrierCode().toUpperCase()) {
-                case "FASTSHIP" -> "http://localhost:8080/api/webhooks/fastship";
-                case "QUICKEXPRESS" -> "http://localhost:8080/api/webhooks/quickexpress";
-                default -> "http://localhost:8080/api/webhooks/reliable";
+                case "FASTSHIP" -> "http://" + backendHost + ":8080/api/webhooks/fastship";
+                case "QUICKEXPRESS" -> "http://" + backendHost + ":8080/api/webhooks/quickexpress";
+                default -> "http://" + backendHost + ":8080/api/webhooks/reliable";
             };
+        } else if (callbackUrl.contains("zippy-backend") && !callbackUrl.contains(":8080")) {
+            callbackUrl = callbackUrl.replace("zippy-backend", "zippy-backend:8080");
         }
 
         Object webhookPayload = buildPayload(record, targetStatus);
         boolean sent = false;
+        String responseDetail = "";
 
         try {
-            webClient.post()
+            var response = webClient.post()
                     .uri(callbackUrl)
                     .bodyValue(webhookPayload)
                     .retrieve()
-                    .toBodilessEntity()
+                    .bodyToMono(String.class)
                     .block();
             sent = true;
+            responseDetail = response != null ? response : "HTTP 200 OK";
         } catch (Exception e) {
             log.warn("Failed to dispatch webhook to {}: {}", callbackUrl, e.getMessage());
+            responseDetail = "Error: " + e.getMessage();
         }
 
         return ResponseEntity.ok(Map.of(
@@ -97,7 +149,9 @@ public class MockStatusTriggerController {
                 "trackingNumber", record.trackingNumber(),
                 "previousStatus", record.currentStatus(),
                 "newStatus", targetStatus,
-                "webhookSent", sent
+                "webhookSent", sent,
+                "targetCallbackUrl", callbackUrl,
+                "backendResponseBody", responseDetail
         ));
     }
 

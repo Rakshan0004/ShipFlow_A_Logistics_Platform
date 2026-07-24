@@ -70,7 +70,7 @@ public class ReliableCourierClient implements CourierClient {
         boolean isCod = "COD".equalsIgnoreCase(order.getPaymentType());
         request.setCollectionType(isCod ? "COD" : "PREPAID");
         request.setCollectionAmount(order.getCodAmount() != null ? order.getCodAmount() : BigDecimal.ZERO);
-        request.setStatusNotificationUrl("http://zippy-backend/api/webhooks/reliable");
+        request.setStatusNotificationUrl("http://zippy-backend:8080/api/webhooks/reliable");
 
         try {
             ReliableCourierShipmentResponse response = webClient.put()

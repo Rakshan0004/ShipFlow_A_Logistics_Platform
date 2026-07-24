@@ -22,6 +22,15 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
 couriers:
   fastship:
     base-url: http://localhost:8081

@@ -42,8 +42,14 @@ public class ShipmentService {
 
     @Transactional
     public ShipmentResponse createShipment(String zippyOrderId) {
+        log.info("===== SHIPMENT CREATION START =====");
+        log.info("Order ID: {}", zippyOrderId);
+        
         Order order = orderRepository.findByZippyOrderId(zippyOrderId)
                 .orElseThrow(() -> new OrderNotFoundException(zippyOrderId));
+
+        log.info("Order found - Status: {}, Selected Carrier: {}, Service: {}", 
+                order.getOrderStatus(), order.getSelectedCarrierCode(), order.getSelectedServiceCode());
 
         if ("ORDER_CREATED".equalsIgnoreCase(order.getOrderStatus())) {
             throw new ValidationException("Carrier selection is required before creating a shipment",
@@ -62,8 +68,20 @@ public class ShipmentService {
             throw new ValidationException("No shipping quote found for order: " + zippyOrderId, Map.of("orderId", zippyOrderId));
         }
 
-        // Selected quote is the quote saved for the order
-        ShippingQuote selectedQuote = quotes.get(0);
+        log.info("Found {} quotes for order", quotes.size());
+
+        // Find the selected quote based on carrier and service code from the order
+        ShippingQuote selectedQuote = quotes.stream()
+                .filter(q -> q.getCarrierCode().equalsIgnoreCase(order.getSelectedCarrierCode())
+                        && q.getServiceCode().equalsIgnoreCase(order.getSelectedServiceCode()))
+                .findFirst()
+                .orElseGet(() -> {
+                    log.warn("Selected carrier {} / {} not found in quotes for order {}, using first available quote", 
+                            order.getSelectedCarrierCode(), order.getSelectedServiceCode(), zippyOrderId);
+                    return quotes.get(0);
+                });
+
+        log.info("Selected quote - Carrier: {}, Service: {}", selectedQuote.getCarrierCode(), selectedQuote.getServiceCode());
 
         CourierClient courierClient = courierClients.stream()
                 .filter(client -> client.getCarrierCode().equalsIgnoreCase(selectedQuote.getCarrierCode()))
@@ -74,6 +92,7 @@ public class ShipmentService {
         ShipmentCreationResult result;
         try {
             result = courierClient.createShipment(order, selectedQuote);
+            log.info("Courier API success - Carrier: {}, Tracking: {}", result.carrierCode(), result.trackingNumber());
         } catch (Exception e) {
             log.error("Shipment creation failed for carrier {}: {}", selectedQuote.getCarrierCode(), e.getMessage());
             throw new CourierShipmentCreationException(selectedQuote.getCarrierCode(), e.getMessage());
@@ -89,9 +108,12 @@ public class ShipmentService {
         shipment.setCurrentStatus("SHIPMENT_CREATED");
 
         Shipment savedShipment = shipmentRepository.save(shipment);
+        log.info("Shipment saved - ID: {}, Carrier: {}", savedShipment.getId(), savedShipment.getCarrierCode());
 
         order.setOrderStatus("SHIPMENT_CREATED");
         orderRepository.save(order);
+
+        log.info("===== SHIPMENT CREATION END =====");
 
         ShipmentResponse.ShipmentDetail detail = new ShipmentResponse.ShipmentDetail(
                 savedShipment.getCarrierCode(),

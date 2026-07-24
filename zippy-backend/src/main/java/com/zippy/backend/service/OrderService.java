@@ -47,6 +47,12 @@ public class OrderService {
         return OrderMapper.toResponse(order);
     }
 
+    public java.util.List<OrderResponse> getAllOrders() {
+        return orderRepository.findAll().stream()
+                .map(OrderMapper::toResponse)
+                .toList();
+    }
+
     private void validateOrderRequest(CreateOrderRequest request) {
         Map<String, String> details = new HashMap<>();
 

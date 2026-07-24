@@ -72,6 +72,12 @@ public class Order {
     @Column(name = "order_status", nullable = false, length = 30)
     private String orderStatus;
 
+    @Column(name = "selected_carrier_code", length = 30)
+    private String selectedCarrierCode;
+
+    @Column(name = "selected_service_code", length = 30)
+    private String selectedServiceCode;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -267,6 +273,22 @@ public class Order {
 
     public void setOrderStatus(String orderStatus) {
         this.orderStatus = orderStatus;
+    }
+
+    public String getSelectedCarrierCode() {
+        return selectedCarrierCode;
+    }
+
+    public void setSelectedCarrierCode(String selectedCarrierCode) {
+        this.selectedCarrierCode = selectedCarrierCode;
+    }
+
+    public String getSelectedServiceCode() {
+        return selectedServiceCode;
+    }
+
+    public void setSelectedServiceCode(String selectedServiceCode) {
+        this.selectedServiceCode = selectedServiceCode;
     }
 
     public Instant getCreatedAt() {

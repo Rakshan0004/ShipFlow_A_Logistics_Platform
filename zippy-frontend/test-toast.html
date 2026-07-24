@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Toast Test - Zippy Logistics</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background: #000;
+      color: #fff;
+    }
+    button {
+      margin: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .success { background: #10b981; color: white; }
+    .error { background: #ef4444; color: white; }
+    .warning { background: #f59e0b; color: white; }
+    .info { background: #3b82f6; color: white; }
+  </style>
+</head>
+<body>
+  <h1>Toast Notification Test</h1>
+  <p>Open the main application at <a href="http://localhost:3001" target="_blank">http://localhost:3001</a></p>
+  <p>You can test the toast notifications by using the useToast hook in any component:</p>
+  
+  <pre style="background: #111; padding: 1rem; border-radius: 8px; overflow-x: auto;">
+import { useToast } from './contexts/ToastContext';
+
+function MyComponent() {
+  const { showSuccess, showError, showWarning, showInfo } = useToast();
+  
+  return (
+    &lt;div&gt;
+      &lt;button onClick={() => showSuccess('Order created successfully!')}&gt;
+        Show Success Toast
+      &lt;/button&gt;
+      &lt;button onClick={() => showError('Failed to create shipment')}&gt;
+        Show Error Toast
+      &lt;/button&gt;
+      &lt;button onClick={() => showWarning('Please verify the address')}&gt;
+        Show Warning Toast
+      &lt;/button&gt;
+      &lt;button onClick={() => showInfo('Rate comparison in progress')}&gt;
+        Show Info Toast
+      &lt;/button&gt;
+    &lt;/div&gt;
+  );
+}</pre>
+
+  <h2>Implementation Complete</h2>
+  <ul>
+    <li>✅ ToastContext.jsx - Context provider with toast queue management</li>
+    <li>✅ ThemeContext.jsx - Theme preferences context (future use)</li>
+    <li>✅ Toast.jsx - Individual toast notification component</li>
+    <li>✅ ToastContainer.jsx - Container that displays all toasts</li>
+    <li>✅ Toast.css - Complete styling with animations</li>
+    <li>✅ App.jsx - Wrapped with ToastProvider and ThemeProvider</li>
+    <li>✅ Auto-dismiss after 5 seconds</li>
+    <li>✅ Support for success, error, warning, info types</li>
+    <li>✅ Smooth slide-in animations from right</li>
+    <li>✅ Positioned at top-right corner</li>
+    <li>✅ Multiple toasts stack vertically</li>
+    <li>✅ Responsive design for mobile</li>
+  </ul>
+
+  <h2>Next Steps</h2>
+  <p>To integrate toasts into existing components (e.g., OrderForm, RateComparisonTable), replace error setState calls with toast notifications.</p>
+  
+  <h3>Example Integration:</h3>
+  <pre style="background: #111; padding: 1rem; border-radius: 8px; overflow-x: auto;">
+// In OrderForm.jsx or any component
+import { useToast } from '../contexts/ToastContext';
+
+export default function OrderForm({ onOrderCreated }) {
+  const { showSuccess, showError } = useToast();
+  
+  const handleSubmit = async (data) => {
+    try {
+      const response = await createOrder(data);
+      showSuccess('Order created successfully!');
+      onOrderCreated(response);
+    } catch (error) {
+      showError(error.message || 'Failed to create order');
+    }
+  };
+  
+  // ... rest of component
+}</pre>
+</body>
+</html>

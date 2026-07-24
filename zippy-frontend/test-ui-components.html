@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UI Components Test - Zippy Logistics</title>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0a0a;
+      color: #ffffff;
+      padding: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .section {
+      margin-bottom: 3rem;
+      padding: 2rem;
+      background: #171717;
+      border-radius: 8px;
+    }
+    .section h2 {
+      margin-bottom: 1.5rem;
+      color: #0ea5e9;
+    }
+    .component-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .test-result {
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 4px;
+      background: #262626;
+    }
+    .success {
+      border-left: 4px solid #10b981;
+    }
+    .error {
+      border-left: 4px solid #ef4444;
+    }
+  </style>
+</head>
+<body>
+  <h1>UI Component Library Test</h1>
+  <p>Testing all 11 core UI components</p>
+
+  <div id="root"></div>
+
+  <script type="module">
+    import React from 'react';
+    import ReactDOM from 'react-dom/client';
+    import { 
+      Button, 
+      Input, 
+      SearchInput, 
+      Select, 
+      Card, 
+      Modal, 
+      Table, 
+      Pagination, 
+      StatusBadge, 
+      Badge, 
+      Skeleton, 
+      EmptyState, 
+      LoadingSpinner 
+    } from './src/components/ui/index.js';
+
+    function ComponentTest() {
+      const [modalOpen, setModalOpen] = React.useState(false);
+      const [searchValue, setSearchValue] = React.useState('');
+      const [currentPage, setCurrentPage] = React.useState(1);
+
+      const testResults = [];
+
+      // Test if all components are imported
+      const components = [
+        { name: 'Button', component: Button },
+        { name: 'Input', component: Input },
+        { name: 'SearchInput', component: SearchInput },
+        { name: 'Select', component: Select },
+        { name: 'Card', component: Card },
+        { name: 'Modal', component: Modal },
+        { name: 'Table', component: Table },
+        { name: 'Pagination', component: Pagination },
+        { name: 'StatusBadge', component: StatusBadge },
+        { name: 'Badge', component: Badge },
+        { name: 'Skeleton', component: Skeleton },
+        { name: 'EmptyState', component: EmptyState },
+        { name: 'LoadingSpinner', component: LoadingSpinner }
+      ];
+
+      components.forEach(({ name, component }) => {
+        testResults.push({
+          name,
+          success: component !== undefined && typeof component === 'function',
+          message: component ? 'Component loaded successfully' : 'Component failed to load'
+        });
+      });
+
+      const tableColumns = [
+        { key: 'id', label: 'ID', sortable: true },
+        { key: 'name', label: 'Name', sortable: true },
+        { key: 'status', label: 'Status', sortable: false, render: (row) => React.createElement(StatusBadge, { status: row.status }) }
+      ];
+
+      const tableData = [
+        { id: '001', name: 'Test Order 1', status: 'ORDER_CREATED' },
+        { id: '002', name: 'Test Order 2', status: 'IN_TRANSIT' },
+        { id: '003', name: 'Test Order 3', status: 'DELIVERED' }
+      ];
+
+      return React.createElement('div', {},
+        React.createElement('div', { className: 'section' },
+          React.createElement('h2', {}, 'Test Results'),
+          testResults.map(result =>
+            React.createElement('div', { 
+              key: result.name, 
+              className: `test-result ${result.success ? 'success' : 'error'}` 
+            },
+              React.createElement('strong', {}, result.name + ': '),
+              result.message
+            )
+          )
+        ),
+
+        React.createElement('div', { className: 'section' },
+          React.createElement('h2', {}, '1. Button Component'),
+          React.createElement('div', { className: 'component-grid' },
+            React.createElement(Button, { variant: 'primary' }, 'Primary'),
+            React.createElement(Button, { variant: 'secondary' }, 'Secondary'),
+            React.createElement(Button, { variant: 'outline' }, 'Outline'),
+            React.createElement(Button, { variant: 'ghost' }, 'Ghost'),
+            React.createElement(Button, { variant: 'danger' }, 'Danger'),
+            React.createElement(Button, { size: 'sm' }, 'Small'),
+            React.createElement(Button, { size: 'lg' }, 'Large'),
+            React.createElement(Button, { loading: true }, 'Loading')
+          )
+        ),
+
+        React.createElement('div', { className: 'section' },
+          React.createElement('h2', {}, '2. Input Component'),
+          React.createElement(Input, { label: 'Name', placeholder: 'Enter your name' }),
+          React.createElement(Input, { label: 'Email', type: 'email', error: 'Invalid email format' }),
+          React.createElement(Input, { label: 'Disabled', disabled: true, value: 'Cannot edit' })
+        ),
+
+        React.createElement('div', { className: 'section' },
+          React.createElement('h2', {}, '3. SearchInput Component'),
+          React.createElement(SearchInput, { 
+            value: searchValue, 
+            onChange: setSearchValue,
+            placeholder: 'Search orders...'
+          })
+        ),
+
+        React.createElement('div', { className: 'section' },
+          React.createElement('h2', {}, '4. Select Component'),
+          React.createElement(Select, { 
+            label: 'Status',
+            options: [
+              { value: 'all', label: 'All Status' },
+              { value: 'created', label: 'Created' },
+              { value: 'delivered', label: 'Delivered' }
+            ]
+          })
+        ),
+
+        React.createElement('div', { className: 'section' },
+          React.createElement('h2', {}, '5. Card Component'),
+          React.createElement(Card, { title: 'Test Card', footer: React.createElement('p', {}, 'Card footer') },
+            React.createElement('p', {}, 'This is card content')
+          )
+        ),
+
+        React.createElement('div', { className: 'section' },
+          React.createElement('h2', {}, '6. Modal Component'),
+          React.createElement(Button, { onClick: () => setModalOpen(true) }, 'Open Modal'),
+          React.createElement(Modal, {
+            isOpen: modalOpen,
+            onClose: () => setModalOpen(false),
+            title: 'Test Modal',
+            footer: React.createElement(Button, { onClick: () => setModalOpen(false) }, 'Close')
+          },
+            React.createElement('p', {}, 'This is modal content')
+          )
+        ),
+
+        React.createElement('div', { className: 'section' },
+          React.createElement('h2', {}, '7. Table Component'),
+          React.createElement(Table, {
+            columns: tableColumns,
+            data: tableData
+          })
+        ),
+
+        React.createElement('div', { className: 'section' },
+          React.createElement('h2', {}, '8. Pagination Component'),
+          React.createElement(Pagination, {
+            currentPage: currentPage,
+            totalPages: 10,
+            onPageChange: setCurrentPage
+          })
+        ),
+
+        React.createElement('div', { className: 'section' },
+          React.createElement('h2', {}, '9. StatusBadge Component'),
+          React.createElement('div', { className: 'component-grid' },
+            React.createElement(StatusBadge, { status: 'ORDER_CREATED' }),
+            React.createElement(StatusBadge, { status: 'IN_TRANSIT' }),
+            React.createElement(StatusBadge, { status: 'DELIVERED' }),
+            React.createElement(StatusBadge, { status: 'CANCELLED' })
+          )
+        ),
+
+        React.createElement('div', { className: 'section' },
+          React.createElement('h2', {}, '10. Badge Component'),
+          React.createElement('div', { className: 'component-grid' },
+            React.createElement(Badge, { variant: 'default' }, 'Default'),
+            React.createElement(Badge, { variant: 'primary' }, 'Primary'),
+            React.createElement(Badge, { variant: 'success' }, 'Success'),
+            React.createElement(Badge, { variant: 'warning' }, 'Warning'),
+            React.createElement(Badge, { variant: 'error' }, 'Error')
+          )
+        ),
+
+        React.createElement('div', { className: 'section' },
+          React.createElement('h2', {}, '11. Skeleton, EmptyState, LoadingSpinner'),
+          React.createElement('h3', {}, 'Skeleton:'),
+          React.createElement(Skeleton, { width: '200px', height: '20px' }),
+          React.createElement('h3', { style: { marginTop: '2rem' } }, 'EmptyState:'),
+          React.createElement(EmptyState, { message: 'No data available' }),
+          React.createElement('h3', { style: { marginTop: '2rem' } }, 'LoadingSpinner:'),
+          React.createElement(LoadingSpinner, {})
+        )
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(ComponentTest));
+  </script>
+</body>
+</html>

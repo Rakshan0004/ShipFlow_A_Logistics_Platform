@@ -1,0 +1,28 @@
+{
+  "merchantOrderId": "TEST-MERCHANT-101",
+  "customer": {
+    "name": "Rahul Sharma",
+    "phone": "9876543210",
+    "email": "rahul@example.com"
+  },
+  "pickupAddress": {
+    "addressLine1": "15 MG Road",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "pincode": "560001"
+  },
+  "deliveryAddress": {
+    "addressLine1": "22 Connaught Place",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "pincode": "110001"
+  },
+  "package": {
+    "weightGrams": 1500,
+    "lengthCm": 20,
+    "widthCm": 15,
+    "heightCm": 10
+  },
+  "paymentType": "COD",
+  "codAmount": 2500.00
+}
