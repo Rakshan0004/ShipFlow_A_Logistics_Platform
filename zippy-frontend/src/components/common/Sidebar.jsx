@@ -5,14 +5,19 @@ import './Sidebar.css';
 export default function Sidebar({ isOpen, setIsOpen }) {
   const location = useLocation();
 
-  const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: '📊' },
-    { path: '/orders', label: 'All Orders', icon: '📦' },
-    { path: '/orders/new', label: 'Create Order', icon: '➕' },
-    { path: '/tracking', label: 'Tracking Center', icon: '📍' },
-    { path: '/analytics', label: 'Analytics', icon: '📈' },
-    { path: '/webhook-studio', label: 'Webhook Studio', icon: '⚡' },
-    { path: '/settings', label: 'Settings', icon: '⚙️' },
+  const merchantItems = [
+    { path: '/merchant/dashboard', label: 'My Dashboard', icon: '📊' },
+    { path: '/merchant/orders/new', label: 'Create Order', icon: '➕' },
+    { path: '/merchant/orders', label: 'My Orders', icon: '📦' },
+    { path: '/merchant/tracking', label: 'Track Shipment', icon: '🔍' },
+  ];
+
+  const adminItems = [
+    { path: '/admin/dashboard', label: 'System Dashboard', icon: '📈' },
+    { path: '/admin/orders', label: 'All Orders', icon: '📋' },
+    { path: '/admin/analytics', label: 'Analytics', icon: '📊' },
+    { path: '/admin/webhooks', label: 'Webhook Studio', icon: '⚡' },
+    { path: '/admin/settings', label: 'Settings', icon: '⚙️' },
   ];
 
   return (
@@ -28,7 +33,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
 
       <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
-          <NavLink to="/dashboard" className="sidebar-brand" onClick={() => setIsOpen(false)}>
+          <NavLink to="/merchant/dashboard" className="sidebar-brand" onClick={() => setIsOpen(false)}>
             <span className="brand-logo">L</span>
             <div className="brand-text">
               <span className="brand-title">LOGISTICS</span>
@@ -45,10 +50,32 @@ export default function Sidebar({ isOpen, setIsOpen }) {
         </div>
 
         <nav className="sidebar-nav">
-          <div className="nav-section-label">MAIN NAVIGATION</div>
-          {navItems.map((item) => {
+          {/* Merchant Section */}
+          <div className="nav-section-label">📦 MERCHANT PORTAL</div>
+          {merchantItems.map((item) => {
             const isActive = location.pathname === item.path || 
-              (item.path === '/orders' && location.pathname.startsWith('/orders') && location.pathname !== '/orders/new');
+              (item.path === '/merchant/orders' && location.pathname.startsWith('/merchant/orders') && location.pathname !== '/merchant/orders/new');
+            
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive: linkActive }) =>
+                  `sidebar-link ${linkActive || isActive ? 'active' : ''}`
+                }
+                onClick={() => setIsOpen(false)}
+              >
+                <span className="sidebar-icon">{item.icon}</span>
+                <span className="sidebar-label">{item.label}</span>
+              </NavLink>
+            );
+          })}
+
+          {/* Admin Section */}
+          <div className="nav-section-label" style={{ marginTop: '2rem' }}>👤 ADMIN PANEL</div>
+          {adminItems.map((item) => {
+            const isActive = location.pathname === item.path || 
+              (item.path === '/admin/orders' && location.pathname.startsWith('/admin/orders'));
             
             return (
               <NavLink
@@ -67,7 +94,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
 
           <div className="nav-section-label" style={{ marginTop: '1.5rem' }}>PUBLIC TOOLS</div>
           <NavLink
-            to="/tracking/public/ZPY-SAMPLE-101"
+            to="/tracking/public"
             className="sidebar-link public-link"
             onClick={() => setIsOpen(false)}
           >
