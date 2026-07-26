@@ -13,7 +13,7 @@ const STAGES = [
   { id: 'PICKED_UP', label: 'Picked Up', icon: '📦' },
   { id: 'IN_TRANSIT', label: 'In Transit', icon: '🚚' },
   { id: 'OUT_FOR_DELIVERY', label: 'Out for Delivery', icon: '🛵' },
-  { id: 'DELIVERED', label: 'Delivered', icon: '🎉' }
+  { id: 'DELIVERED', label: 'Delivered', icon: '🏁' }
 ];
 
 export default function WebhookStudio() {
@@ -59,16 +59,63 @@ export default function WebhookStudio() {
       try {
         const fullRes = await ordersApi.getById(orderIdToLoad);
         const fullOrder = fullRes.data || fullRes;
-        const tracking = fullOrder.awbNumber || fullOrder.shipment?.trackingNumber || fullOrder.trackingNumber || found.orderId;
+        
+        console.log('📦 Order Details:', fullOrder);
+        
+        // Get tracking number from various possible fields
+        const tracking = fullOrder.shipment?.awbNumber || 
+                        fullOrder.awbNumber || 
+                        fullOrder.shipment?.trackingNumber || 
+                        fullOrder.trackingNumber || 
+                        `ZPY-AWB-${fullOrder.orderId.split('-').pop()}`;
+        
         setTrackingNumber(tracking);
-        setCarrier(fullOrder.selectedCarrierCode || fullOrder.carrierCode || 'RELIABLE');
-        setCurrentStage(fullOrder.orderStatus || 'SHIPMENT_CREATED');
+        
+        const selectedCarrier = fullOrder.selectedCarrierCode || fullOrder.shipment?.carrierCode || fullOrder.carrierCode || 'RELIABLE';
+        setCarrier(selectedCarrier);
+        
+        // Determine actual current status - try multiple sources
+        let mappedStatus = 'SHIPMENT_CREATED';
+        
+        // Priority 1: Check shipment.currentStatus (most accurate)
+        if (fullOrder.shipment?.currentStatus) {
+          mappedStatus = fullOrder.shipment.currentStatus;
+          console.log('✅ Using shipment.currentStatus:', mappedStatus);
+        } 
+        // Priority 2: Check orderStatus if it's a shipment stage
+        else if (fullOrder.orderStatus) {
+          const orderStatus = fullOrder.orderStatus;
+          console.log('📋 Order Status:', orderStatus);
+          
+          // If orderStatus is already a shipment stage, use it directly
+          const shipmentStages = ['SHIPMENT_CREATED', 'PICKED_UP', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'];
+          if (shipmentStages.includes(orderStatus)) {
+            mappedStatus = orderStatus;
+            console.log('✅ Using orderStatus directly:', mappedStatus);
+          } else {
+            // Map order status to shipment stage
+            switch(orderStatus) {
+              case 'ORDER_CREATED':
+              case 'CARRIER_SELECTED':
+                mappedStatus = 'SHIPMENT_CREATED';
+                break;
+              default:
+                mappedStatus = 'SHIPMENT_CREATED';
+            }
+            console.log('🔄 Mapped orderStatus to:', mappedStatus);
+          }
+        }
+        
+        setCurrentStage(mappedStatus);
+        console.log('🎯 Final Current Stage:', mappedStatus);
+        showToast(`Loaded Order #${fullOrder.orderId} - Status: ${mappedStatus}`, 'info');
       } catch (e) {
+        console.error('Error loading order details:', e);
         setTrackingNumber(found.trackingNumber || found.orderId);
-        setCarrier(found.carrierCode || 'RELIABLE');
-        setCurrentStage(found.orderStatus || 'SHIPMENT_CREATED');
+        setCarrier(found.selectedCarrierCode || found.carrierCode || 'RELIABLE');
+        setCurrentStage('SHIPMENT_CREATED');
+        showToast(`Loaded Order #${found.orderId}`, 'info');
       }
-      showToast(`Loaded Order #${found.orderId}`, 'info');
     }
   };
 
@@ -138,7 +185,7 @@ export default function WebhookStudio() {
 
           <Select
             value={selectedOrderId}
-            onChange={(val) => handleSelectOrder(val)}
+            onChange={(e) => handleSelectOrder(e.target.value)}
             options={[
               { value: '', label: '-- Select an Order --' },
               ...ordersList.map(o => ({
@@ -150,32 +197,90 @@ export default function WebhookStudio() {
         </div>
 
         {/* Status Stepper */}
-        <div style={{ background: 'var(--neutral-100)', padding: '1.25rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <div style={{ background: 'var(--neutral-100)', padding: '1.25rem 1.5rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
             <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--neutral-600)' }}>CURRENT STATUS:</span>
             <StatusBadge status={currentStage} />
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', overflowX: 'auto', padding: '0.5rem 0' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', overflowX: 'auto', padding: '1rem 0' }}>
+            {/* Background Track Line */}
+            <div style={{
+              position: 'absolute',
+              top: '30px',
+              left: '40px',
+              right: '40px',
+              height: '4px',
+              background: 'var(--neutral-300)',
+              opacity: 0.3,
+              zIndex: 1,
+              borderRadius: '2px'
+            }} />
+
+            {/* Filled Progress Bar */}
+            <div style={{
+              position: 'absolute',
+              top: '30px',
+              left: '40px',
+              width: `calc(${progressPercent}% * (1 - 80px / 100%))`,
+              height: '4px',
+              background: 'linear-gradient(90deg, #10b981 0%, #0ea5e9 100%)',
+              zIndex: 1,
+              borderRadius: '2px',
+              transition: 'width 0.4s ease'
+            }} />
+
             {STAGES.map((s, idx) => {
               const isCompleted = idx < activeStep;
               const isActive = idx === activeStep;
+              const isFuture = idx > activeStep;
+
               return (
                 <div key={s.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '80px', zIndex: 2 }}>
                   <div style={{
-                    width: '36px',
-                    height: '36px',
+                    width: isActive ? '46px' : '40px',
+                    height: isActive ? '46px' : '40px',
                     borderRadius: '50%',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    backgroundColor: isCompleted ? 'var(--success)' : isActive ? 'var(--primary-500)' : 'var(--neutral-300)',
-                    color: '#ffffff',
-                    fontWeight: 700
+                    backgroundColor: 
+                      isCompleted ? 'var(--success)' : 
+                      isActive ? 'var(--primary-500)' : 
+                      'rgba(156, 163, 175, 0.15)',
+                    color: isFuture ? 'var(--neutral-400)' : '#ffffff',
+                    border: isActive 
+                      ? '3px solid #38bdf8' 
+                      : isFuture 
+                        ? '2px solid rgba(156, 163, 175, 0.25)' 
+                        : 'none',
+                    boxShadow: isActive 
+                      ? '0 0 20px rgba(14, 165, 233, 0.9), 0 0 8px rgba(56, 189, 248, 0.6)' 
+                      : isCompleted 
+                        ? '0 0 8px rgba(16, 185, 129, 0.3)' 
+                        : 'none',
+                    fontSize: isActive ? '1.2rem' : '1rem',
+                    fontWeight: 700,
+                    opacity: isFuture ? 0.35 : 1,
+                    filter: isFuture ? 'grayscale(100%)' : 'none',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: isActive ? 'scale(1.1)' : 'scale(1)'
                   }}>
                     {isCompleted ? '✓' : s.icon}
                   </div>
-                  <span style={{ fontSize: '0.72rem', fontWeight: isActive ? 700 : 500, marginTop: '0.4rem', color: isActive ? 'var(--primary-500)' : 'var(--neutral-600)' }}>
+                  <span style={{
+                    fontSize: isActive ? '0.78rem' : '0.72rem',
+                    fontWeight: isActive ? 700 : isCompleted ? 600 : 400,
+                    marginTop: '0.5rem',
+                    color: isActive 
+                      ? '#38bdf8' 
+                      : isCompleted 
+                        ? 'var(--success)' 
+                        : 'var(--neutral-500)',
+                    opacity: isFuture ? 0.45 : 1,
+                    textShadow: isActive ? '0 0 8px rgba(14, 165, 233, 0.5)' : 'none',
+                    textAlign: 'center'
+                  }}>
                     {s.label}
                   </span>
                 </div>
@@ -189,7 +294,7 @@ export default function WebhookStudio() {
           <Select
             label="Courier Network"
             value={carrier}
-            onChange={setCarrier}
+            onChange={(e) => setCarrier(e.target.value)}
             options={[
               { value: 'RELIABLE', label: 'ReliableCourier (Port 8081)' },
               { value: 'FASTSHIP', label: 'FastShip (Port 8081)' },

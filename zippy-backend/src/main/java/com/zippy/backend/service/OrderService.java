@@ -6,13 +6,16 @@ import com.zippy.backend.exception.OrderNotFoundException;
 import com.zippy.backend.exception.ValidationException;
 import com.zippy.backend.mapper.OrderMapper;
 import com.zippy.backend.model.Order;
+import com.zippy.backend.model.Shipment;
 import com.zippy.backend.repository.OrderRepository;
+import com.zippy.backend.repository.ShipmentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Service
@@ -23,10 +26,12 @@ public class OrderService {
     private static final long INITIAL_SEQUENCE = 10001L;
 
     private final OrderRepository orderRepository;
+    private final ShipmentRepository shipmentRepository;
     private final AtomicLong sequenceCounter = new AtomicLong(INITIAL_SEQUENCE);
 
-    public OrderService(OrderRepository orderRepository) {
+    public OrderService(OrderRepository orderRepository, ShipmentRepository shipmentRepository) {
         this.orderRepository = orderRepository;
+        this.shipmentRepository = shipmentRepository;
     }
 
     @Transactional
@@ -44,13 +49,38 @@ public class OrderService {
     public OrderResponse getOrder(String zippyOrderId) {
         Order order = orderRepository.findByZippyOrderId(zippyOrderId)
                 .orElseThrow(() -> new OrderNotFoundException(zippyOrderId));
-        return OrderMapper.toResponse(order);
+        OrderResponse response = OrderMapper.toResponse(order);
+        embedShipmentData(response, zippyOrderId);
+        return response;
     }
 
     public java.util.List<OrderResponse> getAllOrders() {
         return orderRepository.findAll().stream()
-                .map(OrderMapper::toResponse)
+                .map(order -> {
+                    OrderResponse response = OrderMapper.toResponse(order);
+                    embedShipmentData(response, order.getZippyOrderId());
+                    return response;
+                })
                 .toList();
+    }
+
+    /**
+     * Looks up the shipment for this order and embeds its key fields
+     * (currentStatus, awbNumber, carrierCode) into the response so the
+     * frontend always sees the real tracking status rather than the coarse
+     * order-level status.
+     */
+    private void embedShipmentData(OrderResponse response, String zippyOrderId) {
+        Optional<Shipment> shipmentOpt = shipmentRepository.findByOrder_ZippyOrderId(zippyOrderId);
+        if (shipmentOpt.isPresent()) {
+            Shipment s = shipmentOpt.get();
+            Map<String, Object> shipmentMap = new HashMap<>();
+            shipmentMap.put("currentStatus", s.getCurrentStatus());
+            shipmentMap.put("awbNumber", s.getTrackingNumber());
+            shipmentMap.put("carrierCode", s.getCarrierCode());
+            shipmentMap.put("carrierShipmentId", s.getCarrierShipmentId());
+            response.setShipment(shipmentMap);
+        }
     }
 
     private void validateOrderRequest(CreateOrderRequest request) {
