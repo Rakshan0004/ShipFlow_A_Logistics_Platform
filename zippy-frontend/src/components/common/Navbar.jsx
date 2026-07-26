@@ -12,15 +12,15 @@ export default function Navbar({ onToggleSidebar }) {
   // Simple title mapper for current route
   const getPageTitle = () => {
     const path = location.pathname;
-    if (path === '/dashboard') return 'Dashboard Overview';
-    if (path === '/orders') return 'Shipment Orders';
-    if (path === '/orders/new') return 'Create New Order';
+    if (path.includes('/dashboard')) return 'Dashboard Overview';
+    if (path.includes('/orders') && !path.includes('/new') && !path.includes('/rates')) return 'Shipment Orders';
+    if (path.includes('/orders/new')) return 'Create New Order';
     if (path.includes('/rates')) return 'Rate Comparison & Courier Selection';
-    if (path.startsWith('/orders/')) return 'Order Details';
-    if (path === '/tracking') return 'Internal Tracking Center';
-    if (path === '/analytics') return 'Logistics Analytics';
-    if (path === '/webhook-studio') return 'Webhook Simulation Studio';
-    if (path === '/settings') return 'Platform Settings';
+    if (path.includes('/orders/')) return 'Order Details';
+    if (path.includes('/tracking')) return 'Internal Tracking Center';
+    if (path.includes('/analytics')) return 'Logistics Analytics';
+    if (path.includes('/webhooks')) return 'Webhook Simulation Studio';
+    if (path.includes('/settings')) return 'Platform Settings';
     return 'Zippy Platform';
   };
 
@@ -52,11 +52,11 @@ export default function Navbar({ onToggleSidebar }) {
           {theme === 'dark' ? '🌙' : '☀️'}
         </button>
 
-        {location.pathname !== '/orders/new' && (
+        {!location.pathname.endsWith('/orders/new') && (
           <Button 
             variant="primary" 
             size="sm"
-            onClick={() => navigate('/orders/new')}
+            onClick={() => navigate('/merchant/orders/new')}
           >
             + New Order
           </Button>

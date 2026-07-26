@@ -18,9 +18,10 @@ export default function OrderCreate() {
       
       const orderId = orderData.orderId || orderData.id;
       if (orderId) {
-        navigate(`/orders/${orderId}/rates`, { state: { order: orderData } });
+        // Always redirect to merchant rates page (since merchant creates orders)
+        navigate(`/merchant/orders/${orderId}/rates`, { state: { order: orderData } });
       } else {
-        navigate('/orders');
+        navigate('/merchant/orders');
       }
     } catch (err) {
       console.error('Failed to create order:', err);

@@ -104,34 +104,42 @@ export default function MerchantOrderList() {
             )}
           </div>
         ) : (
-          <div className="table-container">
-            <table className="data-table">
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ 
+              width: '100%', 
+              borderCollapse: 'collapse',
+              fontSize: '0.9rem'
+            }}>
               <thead>
-                <tr>
-                  <th>Order ID</th>
-                  <th>Merchant Order ID</th>
-                  <th>Customer</th>
-                  <th>Status</th>
-                  <th>Courier</th>
-                  <th>Destination</th>
-                  <th>Created</th>
-                  <th>Actions</th>
+                <tr style={{ borderBottom: '2px solid var(--neutral-200)' }}>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: 'var(--neutral-700)', whiteSpace: 'nowrap' }}>Order ID</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: 'var(--neutral-700)', whiteSpace: 'nowrap' }}>Merchant Ref</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: 'var(--neutral-700)' }}>Customer</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: 'var(--neutral-700)' }}>Status</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: 'var(--neutral-700)' }}>Courier</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: 'var(--neutral-700)' }}>Destination</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: 'var(--neutral-700)' }}>Created</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: 'var(--neutral-700)' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredOrders.map(order => (
-                  <tr key={order.orderId}>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9rem' }}>
+                  <tr key={order.orderId} style={{ borderBottom: '1px solid var(--neutral-100)' }}>
+                    <td style={{ padding: '0.75rem', fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--neutral-900)', whiteSpace: 'nowrap' }}>
                       {order.orderId}
                     </td>
-                    <td>{order.merchantOrderId}</td>
-                    <td>{order.customer?.name || order.customerName}</td>
-                    <td>
+                    <td style={{ padding: '0.75rem', color: 'var(--neutral-800)' }}>
+                      {order.merchantOrderId}
+                    </td>
+                    <td style={{ padding: '0.75rem', color: 'var(--neutral-800)' }}>
+                      {order.customer?.name || order.customerName || 'N/A'}
+                    </td>
+                    <td style={{ padding: '0.75rem' }}>
                       <span className={`status-badge status-${order.orderStatus?.toLowerCase().replace(/_/g, '-')}`}>
                         {order.orderStatus?.replace(/_/g, ' ')}
                       </span>
                     </td>
-                    <td>
+                    <td style={{ padding: '0.75rem' }}>
                       {order.selectedCarrierCode ? (
                         <span style={{ fontWeight: 600, color: 'var(--primary-600)' }}>
                           {order.selectedCarrierCode}
@@ -140,10 +148,14 @@ export default function MerchantOrderList() {
                         <span style={{ color: 'var(--neutral-500)' }}>Not selected</span>
                       )}
                     </td>
-                    <td>{order.deliveryAddress?.city || order.deliveryCity}</td>
-                    <td>{new Date(order.createdAt).toLocaleDateString()}</td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <td style={{ padding: '0.75rem', color: 'var(--neutral-800)' }}>
+                      {order.deliveryAddress?.city || order.deliveryCity || 'N/A'}
+                    </td>
+                    <td style={{ padding: '0.75rem', color: 'var(--neutral-600)', fontSize: '0.85rem' }}>
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </td>
+                    <td style={{ padding: '0.75rem' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem', whiteSpace: 'nowrap' }}>
                         <Button 
                           variant="link" 
                           size="sm"

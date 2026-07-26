@@ -70,18 +70,18 @@ export default function Dashboard() {
       }}>
         <div>
           <h2 style={{ fontSize: '1.3rem', margin: 0, color: 'var(--neutral-950)', fontWeight: 600 }}>
-            Welcome to Zippy Logistics Engine 🚀
+            Admin System Dashboard �
           </h2>
           <p style={{ margin: '0.5rem 0 0', color: 'var(--neutral-700)', fontSize: '0.95rem' }}>
-            Multi-carrier rate aggregator, real-time tracking, and automated webhook lifecycle management.
+            Monitor all merchants, orders, couriers, and system-wide performance metrics.
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', flexShrink: 0 }}>
           <Button variant="outline" size="sm" onClick={fetchDashboardData}>
             🔄 Refresh
           </Button>
-          <Button variant="primary" size="sm" onClick={() => navigate('/orders/new')}>
-            + Create Order
+          <Button variant="primary" size="sm" onClick={() => navigate('/admin/orders')}>
+            View All Orders
           </Button>
         </div>
       </div>
@@ -135,13 +135,13 @@ export default function Dashboard() {
         
         <Card title="Quick Logistics Operations">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <Button variant="outline" onClick={() => navigate('/orders/new')} style={{ justifyContent: 'flex-start' }}>
+            <Button variant="outline" onClick={() => navigate('/merchant/orders/new')} style={{ justifyContent: 'flex-start' }}>
               ➕ Create Single Shipment Order
             </Button>
-            <Button variant="outline" onClick={() => navigate('/tracking')} style={{ justifyContent: 'flex-start' }}>
+            <Button variant="outline" onClick={() => navigate('/tracking/center')} style={{ justifyContent: 'flex-start' }}>
               📍 Open In-Transit Tracking Center
             </Button>
-            <Button variant="outline" onClick={() => navigate('/webhook-studio')} style={{ justifyContent: 'flex-start' }}>
+            <Button variant="outline" onClick={() => navigate('/admin/webhooks')} style={{ justifyContent: 'flex-start' }}>
               ⚡ Advance Status in Webhook Studio
             </Button>
           </div>
@@ -152,7 +152,7 @@ export default function Dashboard() {
       <Card 
         title="Recent Orders" 
         headerExtra={
-          <Button variant="ghost" size="sm" onClick={() => navigate('/orders')}>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/admin/orders')}>
             View All Orders →
           </Button>
         }

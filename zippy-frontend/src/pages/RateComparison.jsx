@@ -18,6 +18,10 @@ export default function RateComparison() {
   const [selectingCarrier, setSelectingCarrier] = useState(false);
   const [sortBy, setSortBy] = useState('price');
 
+  // Detect if we're on admin or merchant route
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  const basePath = isAdminRoute ? '/admin' : '/merchant';
+
   const fetchRates = async (sortCriteria = sortBy) => {
     setLoadingRates(true);
     try {
@@ -52,10 +56,10 @@ export default function RateComparison() {
       try {
         const shipRes = await shipmentsApi.create(id);
         showToast('Shipment booked and AWB generated!', 'success');
-        navigate(`/orders/${id}`);
+        navigate(`${basePath}/orders/${id}`);
       } catch (shipErr) {
         showToast('Carrier selected, but shipment creation pending.', 'warning');
-        navigate(`/orders/${id}`);
+        navigate(`${basePath}/orders/${id}`);
       }
     } catch (err) {
       showToast(err.message || 'Failed to select carrier', 'error');
@@ -78,7 +82,7 @@ export default function RateComparison() {
         gap: '1rem',
         flexWrap: 'wrap'
       }}>
-        <Button variant="outline" size="sm" onClick={() => navigate(`/orders/${id}`)}>
+        <Button variant="outline" size="sm" onClick={() => navigate(`${basePath}/orders/${id}`)}>
           ← Back to Order
         </Button>
         <h2 style={{ 

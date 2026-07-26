@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import OrderSummaryCard from '../components/features/orders/OrderSummaryCard';
 import CustomerInfoCard from '../components/features/orders/CustomerInfoCard';
 import AddressCard from '../components/features/orders/AddressCard';
@@ -17,7 +17,12 @@ import { CARRIER_NAMES } from '../utils/constants';
 export default function OrderDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { showToast } = useToast();
+
+  // Detect if we're on admin or merchant route
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  const basePath = isAdminRoute ? '/admin' : '/merchant';
 
   const [order, setOrder] = useState(null);
   const [trackingInfo, setTrackingInfo] = useState(null);
@@ -89,7 +94,7 @@ export default function OrderDetails() {
       <Card style={{ textAlign: 'center', padding: '3rem' }}>
         <h2>Order Not Found</h2>
         <p style={{ color: 'var(--neutral-600)', margin: '1rem 0' }}>No order exists with ID "{id}".</p>
-        <Button variant="primary" onClick={() => navigate('/orders')}>Back to All Orders</Button>
+        <Button variant="primary" onClick={() => navigate(`${basePath}/orders`)}>Back to All Orders</Button>
       </Card>
     );
   }
@@ -101,7 +106,7 @@ export default function OrderDetails() {
       {/* Top Header Actions */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <Button variant="outline" size="sm" onClick={() => navigate('/orders')}>
+          <Button variant="outline" size="sm" onClick={() => navigate(`${basePath}/orders`)}>
             ← Back to Orders
           </Button>
           <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Order Details: {order.orderId}</h2>
@@ -109,7 +114,7 @@ export default function OrderDetails() {
 
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           {order.orderStatus === 'ORDER_CREATED' && (
-            <Button variant="primary" onClick={() => navigate(`/orders/${order.orderId}/rates`)}>
+            <Button variant="primary" onClick={() => navigate(`${basePath}/orders/${order.orderId}/rates`)}>
               ⚡ Select Courier & Compare Rates
             </Button>
           )}

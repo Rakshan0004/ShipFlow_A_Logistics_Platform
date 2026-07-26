@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Table from '../../ui/Table/Table';
 import StatusBadge from '../../ui/StatusBadge/StatusBadge';
 import Button from '../../ui/Button/Button';
@@ -8,6 +8,9 @@ import { CARRIER_NAMES } from '../../../utils/constants';
 
 export default function ActiveShipmentsTable({ shipments = [], loading }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  const basePath = isAdminRoute ? '/admin' : '/merchant';
 
   const columns = [
     { 
@@ -57,7 +60,7 @@ export default function ActiveShipmentsTable({ shipments = [], loading }) {
           size="sm"
           onClick={(e) => {
             e.stopPropagation();
-            navigate(`/orders/${row.orderId}`);
+            navigate(`${basePath}/orders/${row.orderId}`);
           }}
         >
           Details →
@@ -71,7 +74,7 @@ export default function ActiveShipmentsTable({ shipments = [], loading }) {
       columns={columns} 
       data={shipments} 
       loading={loading}
-      onRowClick={(row) => navigate(`/orders/${row.orderId}`)}
+      onRowClick={(row) => navigate(`${basePath}/orders/${row.orderId}`)}
       emptyMessage="No active in-transit shipments at the moment."
     />
   );

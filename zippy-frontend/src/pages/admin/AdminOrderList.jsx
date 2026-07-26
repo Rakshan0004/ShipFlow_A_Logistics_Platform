@@ -91,7 +91,7 @@ export default function OrderList() {
       header: 'Order ID',
       sortable: true,
       render: (val, row) => (
-        <span style={{ fontWeight: 600, color: 'var(--primary-500)', cursor: 'pointer' }} onClick={() => navigate(`/orders/${val}`)}>
+        <span style={{ fontWeight: 600, color: 'var(--primary-500)', cursor: 'pointer' }} onClick={() => navigate(`/admin/orders/${val}`)}>
           {val}
         </span>
       )
@@ -127,7 +127,7 @@ export default function OrderList() {
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => navigate(`/orders/${row.orderId}`)}
+            onClick={() => navigate(`/admin/orders/${row.orderId}`)}
           >
             View
           </Button>
@@ -135,7 +135,7 @@ export default function OrderList() {
             <Button 
               variant="primary" 
               size="sm"
-              onClick={() => navigate(`/orders/${row.orderId}/rates`)}
+              onClick={() => navigate(`/admin/orders/${row.orderId}/rates`)}
             >
               Rates →
             </Button>
@@ -160,6 +160,22 @@ export default function OrderList() {
         <div style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
+          alignItems: 'flex-start', 
+          flexWrap: 'wrap', 
+          gap: '1rem',
+          marginBottom: '1rem'
+        }}>
+          <div>
+            <h1 style={{ fontSize: '1.75rem', margin: '0 0 0.25rem 0' }}>All Orders (Admin)</h1>
+            <p style={{ color: 'var(--neutral-600)', margin: 0, fontSize: '0.9rem' }}>
+              View and manage orders from all merchants
+            </p>
+          </div>
+        </div>
+        
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
           alignItems: 'center', 
           flexWrap: 'wrap', 
           gap: '1rem' 
@@ -181,7 +197,7 @@ export default function OrderList() {
             </div>
           </div>
 
-          <Button variant="primary" onClick={() => navigate('/orders/new')}>
+          <Button variant="primary" onClick={() => navigate('/merchant/orders/new')}>
             + Create Order
           </Button>
         </div>

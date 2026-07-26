@@ -9,10 +9,26 @@ export default function RecentOrdersTable({ orders = [], loading }) {
   const navigate = useNavigate();
 
   const columns = [
-    { key: 'orderId', header: 'Order ID' },
+    { 
+      key: 'orderId', 
+      header: 'Order ID',
+      render: (val) => (
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9rem' }}>
+          {val}
+        </span>
+      )
+    },
     { key: 'merchantOrderId', header: 'Merchant Ref' },
-    { key: 'customerName', header: 'Customer' },
-    { key: 'deliveryCity', header: 'Delivery City' },
+    { 
+      key: 'customerName', 
+      header: 'Customer',
+      render: (_, row) => row.customer?.name || row.customerName || 'N/A'
+    },
+    { 
+      key: 'deliveryCity', 
+      header: 'Destination',
+      render: (_, row) => row.deliveryAddress?.city || row.deliveryCity || 'N/A'
+    },
     { 
       key: 'orderStatus', 
       header: 'Status',
@@ -25,17 +41,17 @@ export default function RecentOrdersTable({ orders = [], loading }) {
     },
     {
       key: 'actions',
-      header: 'Action',
+      header: 'Actions',
       render: (_, row) => (
         <Button 
-          variant="outline" 
+          variant="link" 
           size="sm"
           onClick={(e) => {
             e.stopPropagation();
-            navigate(`/orders/${row.orderId}`);
+            navigate(`/admin/orders/${row.orderId}`);
           }}
         >
-          View →
+          View Details
         </Button>
       )
     }
@@ -46,7 +62,7 @@ export default function RecentOrdersTable({ orders = [], loading }) {
       columns={columns} 
       data={orders} 
       loading={loading}
-      onRowClick={(row) => navigate(`/orders/${row.orderId}`)}
+      onRowClick={(row) => navigate(`/admin/orders/${row.orderId}`)}
       emptyMessage="No recent orders found."
     />
   );

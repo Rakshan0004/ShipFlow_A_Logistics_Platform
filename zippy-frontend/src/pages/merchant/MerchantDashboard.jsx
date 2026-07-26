@@ -5,7 +5,6 @@ import Button from '../../components/ui/Button/Button';
 import LoadingSpinner from '../../components/ui/LoadingSpinner/LoadingSpinner';
 import { ordersApi } from '../../api/endpoints/orders';
 import { useToast } from '../../contexts/ToastContext';
-import '../../styles/Dashboard.css';
 
 export default function MerchantDashboard() {
   const navigate = useNavigate();
@@ -77,28 +76,50 @@ export default function MerchantDashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="stats-grid">
-        <Card className="stat-card stat-card-primary">
-          <div className="stat-icon">📦</div>
-          <div className="stat-content">
-            <div className="stat-label">Total Orders</div>
-            <div className="stat-value">{stats?.totalOrders || 0}</div>
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+        gap: '1.5rem' 
+      }}>
+        <Card>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ fontSize: '3rem' }}>📦</div>
+            <div>
+              <div style={{ fontSize: '0.875rem', color: 'var(--neutral-600)', marginBottom: '0.25rem' }}>
+                Total Orders
+              </div>
+              <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--primary-600)' }}>
+                {stats?.totalOrders || 0}
+              </div>
+            </div>
           </div>
         </Card>
 
-        <Card className="stat-card stat-card-warning">
-          <div className="stat-icon">🚚</div>
-          <div className="stat-content">
-            <div className="stat-label">Active Shipments</div>
-            <div className="stat-value">{stats?.activeShipments || 0}</div>
+        <Card>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ fontSize: '3rem' }}>🚚</div>
+            <div>
+              <div style={{ fontSize: '0.875rem', color: 'var(--neutral-600)', marginBottom: '0.25rem' }}>
+                Active Shipments
+              </div>
+              <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--warning)' }}>
+                {stats?.activeShipments || 0}
+              </div>
+            </div>
           </div>
         </Card>
 
-        <Card className="stat-card stat-card-success">
-          <div className="stat-icon">✅</div>
-          <div className="stat-content">
-            <div className="stat-label">Delivered Today</div>
-            <div className="stat-value">{stats?.deliveredToday || 0}</div>
+        <Card>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ fontSize: '3rem' }}>✅</div>
+            <div>
+              <div style={{ fontSize: '0.875rem', color: 'var(--neutral-600)', marginBottom: '0.25rem' }}>
+                Delivered Today
+              </div>
+              <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--success)' }}>
+                {stats?.deliveredToday || 0}
+              </div>
+            </div>
           </div>
         </Card>
       </div>
@@ -168,35 +189,47 @@ export default function MerchantDashboard() {
             </Button>
           </div>
         ) : (
-          <div className="table-container">
-            <table className="data-table">
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ 
+              width: '100%', 
+              borderCollapse: 'collapse',
+              fontSize: '0.9rem'
+            }}>
               <thead>
-                <tr>
-                  <th>Order ID</th>
-                  <th>Merchant Order ID</th>
-                  <th>Customer</th>
-                  <th>Status</th>
-                  <th>Destination</th>
-                  <th>Created</th>
-                  <th>Actions</th>
+                <tr style={{ borderBottom: '2px solid var(--neutral-200)' }}>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: 'var(--neutral-700)' }}>Order ID</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: 'var(--neutral-700)' }}>Merchant Ref</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: 'var(--neutral-700)' }}>Customer</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: 'var(--neutral-700)' }}>Status</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: 'var(--neutral-700)' }}>Destination</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: 'var(--neutral-700)' }}>Created</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: 'var(--neutral-700)' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {recentOrders.map(order => (
-                  <tr key={order.orderId}>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9rem' }}>
+                  <tr key={order.orderId} style={{ borderBottom: '1px solid var(--neutral-100)' }}>
+                    <td style={{ padding: '0.75rem', fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--neutral-900)' }}>
                       {order.orderId}
                     </td>
-                    <td>{order.merchantOrderId}</td>
-                    <td>{order.customer?.name || order.customerName}</td>
-                    <td>
+                    <td style={{ padding: '0.75rem', color: 'var(--neutral-800)' }}>
+                      {order.merchantOrderId}
+                    </td>
+                    <td style={{ padding: '0.75rem', color: 'var(--neutral-800)' }}>
+                      {order.customer?.name || order.customerName || 'N/A'}
+                    </td>
+                    <td style={{ padding: '0.75rem' }}>
                       <span className={`status-badge status-${order.orderStatus?.toLowerCase().replace(/_/g, '-')}`}>
                         {order.orderStatus?.replace(/_/g, ' ')}
                       </span>
                     </td>
-                    <td>{order.deliveryAddress?.city || order.deliveryCity}</td>
-                    <td>{new Date(order.createdAt).toLocaleDateString()}</td>
-                    <td>
+                    <td style={{ padding: '0.75rem', color: 'var(--neutral-800)' }}>
+                      {order.deliveryAddress?.city || order.deliveryCity || 'N/A'}
+                    </td>
+                    <td style={{ padding: '0.75rem', color: 'var(--neutral-600)', fontSize: '0.85rem' }}>
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </td>
+                    <td style={{ padding: '0.75rem' }}>
                       <Button 
                         variant="link" 
                         size="sm"
