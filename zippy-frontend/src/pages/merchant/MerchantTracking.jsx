@@ -153,6 +153,7 @@ export default function MerchantTracking() {
           <StatusTimeline 
             currentStatus={trackingData.currentStatus}
             events={trackingData.events || []}
+            order={orderData}
           />
 
           {/* Actions */}

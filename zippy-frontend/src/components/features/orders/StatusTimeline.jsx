@@ -10,16 +10,41 @@ const STATUS_STEPS = [
   { key: 'PICKED_UP', label: 'Picked Up', icon: '🚚' },
   { key: 'IN_TRANSIT', label: 'In Transit', icon: '🚀' },
   { key: 'OUT_FOR_DELIVERY', label: 'Out for Delivery', icon: '🏃' },
-  { key: 'DELIVERED', label: 'Delivered', icon: '✅' }
+  { key: 'DELIVERED', label: 'Delivered', icon: '🏁' }
 ];
 
-export default function StatusTimeline({ currentStatus = 'ORDER_CREATED', events = [] }) {
+const normalizeStatusKey = (status) => {
+  if (!status) return 'ORDER_CREATED';
+  const str = String(status).toUpperCase();
+  if (str.includes('DELIVERED')) return 'DELIVERED';
+  if (str.includes('OUT_FOR_DELIVERY') || str.includes('DISPATCH')) return 'OUT_FOR_DELIVERY';
+  if (str.includes('IN_TRANSIT') || str.includes('TRANSIT')) return 'IN_TRANSIT';
+  if (str.includes('PICKED_UP') || str.includes('PICKUP')) return 'PICKED_UP';
+  if (str.includes('SHIPMENT_CREATED') || str.includes('BOOKED') || str.includes('MANIFEST')) return 'SHIPMENT_CREATED';
+  if (str.includes('CARRIER_SELECTED') || str.includes('COURIER_SELECTED')) return 'CARRIER_SELECTED';
+  if (str.includes('ORDER_CREATED') || str.includes('CREATED')) return 'ORDER_CREATED';
+  return status;
+};
+
+export default function StatusTimeline({ currentStatus = 'ORDER_CREATED', events = [], order = null }) {
+  // Determine effective status considering order data signals
+  let effectiveStatusKey = normalizeStatusKey(currentStatus);
+
+  if (order) {
+    if ((order.awbNumber || order.trackingNumber) && ['ORDER_CREATED', 'CARRIER_SELECTED'].includes(effectiveStatusKey)) {
+      effectiveStatusKey = 'SHIPMENT_CREATED';
+    } else if ((order.selectedCarrierCode || order.carrierCode) && effectiveStatusKey === 'ORDER_CREATED') {
+      effectiveStatusKey = 'CARRIER_SELECTED';
+    }
+  }
+
+  const currentIndex = STATUS_STEPS.findIndex(s => s.key === effectiveStatusKey);
+
   const getStepState = (stepKey) => {
-    if (currentStatus === 'CANCELLED' || currentStatus === 'RTO' || currentStatus === 'DELIVERY_FAILED') {
-      if (stepKey === currentStatus) return 'failed';
+    if (effectiveStatusKey === 'CANCELLED' || effectiveStatusKey === 'RTO' || effectiveStatusKey === 'DELIVERY_FAILED') {
+      if (stepKey === effectiveStatusKey) return 'failed';
     }
 
-    const currentIndex = STATUS_STEPS.findIndex(s => s.key === currentStatus);
     const stepIndex = STATUS_STEPS.findIndex(s => s.key === stepKey);
 
     if (stepIndex === -1) return 'future';
@@ -27,6 +52,8 @@ export default function StatusTimeline({ currentStatus = 'ORDER_CREATED', events
     if (stepIndex === currentIndex) return 'active';
     return 'future';
   };
+
+  const progressPercent = currentIndex < 0 ? 0 : (currentIndex / (STATUS_STEPS.length - 1)) * 100;
 
   return (
     <Card title="Tracking Progress & Timeline">
@@ -38,10 +65,41 @@ export default function StatusTimeline({ currentStatus = 'ORDER_CREATED', events
           justifyContent: 'space-between',
           position: 'relative',
           overflowX: 'auto',
-          padding: '1rem 0'
+          padding: '1.25rem 0'
         }}>
-          {STATUS_STEPS.map((step, idx) => {
+          {/* Progress Connecting Track Line */}
+          <div style={{
+            position: 'absolute',
+            top: '32px',
+            left: '50px',
+            right: '50px',
+            height: '4px',
+            background: 'var(--neutral-300)',
+            opacity: 0.3,
+            zIndex: 1,
+            borderRadius: '2px'
+          }} />
+
+          {/* Filled Progress Bar */}
+          <div style={{
+            position: 'absolute',
+            top: '32px',
+            left: '50px',
+            width: `calc(${progressPercent}% * (1 - 100px / 100%))`,
+            height: '4px',
+            background: 'linear-gradient(90deg, #10b981 0%, #0ea5e9 100%)',
+            zIndex: 1,
+            borderRadius: '2px',
+            transition: 'width 0.4s ease'
+          }} />
+
+          {STATUS_STEPS.map((step) => {
             const state = getStepState(step.key);
+            const isCompleted = state === 'completed';
+            const isActive = state === 'active';
+            const isFailed = state === 'failed';
+            const isFuture = state === 'future';
+
             return (
               <div 
                 key={step.key} 
@@ -54,8 +112,8 @@ export default function StatusTimeline({ currentStatus = 'ORDER_CREATED', events
                 }}
               >
                 <div style={{
-                  width: '40px',
-                  height: '40px',
+                  width: '42px',
+                  height: '42px',
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
@@ -63,20 +121,32 @@ export default function StatusTimeline({ currentStatus = 'ORDER_CREATED', events
                   fontSize: '1.1rem',
                   fontWeight: 700,
                   backgroundColor: 
-                    state === 'completed' ? 'var(--success)' :
-                    state === 'active' ? 'var(--primary-500)' :
-                    state === 'failed' ? 'var(--error)' : 'var(--neutral-200)',
-                  color: state === 'future' ? 'var(--neutral-500)' : '#ffffff',
-                  boxShadow: state === 'active' ? '0 0 12px rgba(14, 165, 233, 0.5)' : 'none',
+                    isCompleted ? 'var(--success)' :
+                    isActive ? 'var(--primary-500)' :
+                    isFailed ? 'var(--error)' : 'rgba(156, 163, 175, 0.15)',
+                  color: isFuture ? 'var(--neutral-400)' : '#ffffff',
+                  border: isActive 
+                    ? '3px solid var(--primary-300)' 
+                    : isFuture 
+                      ? '2px solid rgba(156, 163, 175, 0.25)' 
+                      : 'none',
+                  boxShadow: isActive ? '0 0 16px rgba(14, 165, 233, 0.6)' : isCompleted ? '0 0 8px rgba(16, 185, 129, 0.3)' : 'none',
+                  opacity: isFuture ? 0.45 : 1,
+                  filter: isFuture ? 'grayscale(80%)' : 'none',
                   transition: 'all 0.3s ease'
                 }}>
-                  {state === 'completed' ? '✓' : step.icon}
+                  {isCompleted ? '✓' : step.icon}
                 </div>
                 <span style={{
                   fontSize: '0.75rem',
-                  fontWeight: state === 'active' ? 700 : 500,
-                  color: state === 'active' ? 'var(--primary-500)' : 'var(--neutral-600)',
-                  marginTop: '0.5rem',
+                  fontWeight: isActive ? 700 : isCompleted ? 600 : 400,
+                  color: isActive 
+                    ? 'var(--primary-500)' 
+                    : isCompleted 
+                      ? 'var(--success)' 
+                      : 'var(--neutral-500)',
+                  opacity: isFuture ? 0.45 : 1,
+                  marginTop: '0.6rem',
                   textAlign: 'center'
                 }}>
                   {step.label}

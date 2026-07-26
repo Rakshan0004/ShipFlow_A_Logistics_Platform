@@ -162,14 +162,28 @@ public class WebhookProcessingService {
     }
 
     private Optional<Shipment> findShipment(String trackingNumber, String carrierShipmentId) {
-        if (trackingNumber != null) {
+        if (trackingNumber != null && !trackingNumber.isBlank()) {
             Optional<Shipment> byTracking = shipmentRepository.findByTrackingNumber(trackingNumber);
             if (byTracking.isPresent()) {
                 return byTracking;
             }
+            Optional<Shipment> byOrder = shipmentRepository.findByOrder_ZippyOrderId(trackingNumber);
+            if (byOrder.isPresent()) {
+                return byOrder;
+            }
+            if (trackingNumber.contains("ZPY-ORD-")) {
+                String extractedOrderId = trackingNumber.substring(trackingNumber.indexOf("ZPY-ORD-"));
+                Optional<Shipment> byExtracted = shipmentRepository.findByOrder_ZippyOrderId(extractedOrderId);
+                if (byExtracted.isPresent()) {
+                    return byExtracted;
+                }
+            }
         }
-        if (carrierShipmentId != null) {
-            return shipmentRepository.findByCarrierShipmentId(carrierShipmentId);
+        if (carrierShipmentId != null && !carrierShipmentId.isBlank()) {
+            Optional<Shipment> byCarrierId = shipmentRepository.findByCarrierShipmentId(carrierShipmentId);
+            if (byCarrierId.isPresent()) {
+                return byCarrierId;
+            }
         }
         return Optional.empty();
     }

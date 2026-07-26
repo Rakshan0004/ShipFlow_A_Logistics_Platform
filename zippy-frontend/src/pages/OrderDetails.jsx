@@ -173,6 +173,7 @@ export default function OrderDetails() {
       <StatusTimeline 
         currentStatus={order.orderStatus} 
         events={trackingInfo?.events || order.statusHistory || []} 
+        order={order}
       />
 
       {/* Cancel Confirmation Modal */}

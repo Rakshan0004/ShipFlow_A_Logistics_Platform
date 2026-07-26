@@ -52,13 +52,22 @@ export default function WebhookStudio() {
     fetchOrders();
   }, []);
 
-  const handleSelectOrder = (orderIdToLoad, currentList = ordersList) => {
+  const handleSelectOrder = async (orderIdToLoad, currentList = ordersList) => {
     setSelectedOrderId(orderIdToLoad);
     const found = currentList.find(o => o.orderId === orderIdToLoad);
     if (found) {
-      setTrackingNumber(found.awbNumber || found.shipment?.trackingNumber || `ZPY-AWB-${found.orderId}`);
-      setCarrier(found.selectedCarrierCode || found.shipment?.carrierCode || 'RELIABLE');
-      setCurrentStage(found.orderStatus || 'SHIPMENT_CREATED');
+      try {
+        const fullRes = await ordersApi.getById(orderIdToLoad);
+        const fullOrder = fullRes.data || fullRes;
+        const tracking = fullOrder.awbNumber || fullOrder.shipment?.trackingNumber || fullOrder.trackingNumber || found.orderId;
+        setTrackingNumber(tracking);
+        setCarrier(fullOrder.selectedCarrierCode || fullOrder.carrierCode || 'RELIABLE');
+        setCurrentStage(fullOrder.orderStatus || 'SHIPMENT_CREATED');
+      } catch (e) {
+        setTrackingNumber(found.trackingNumber || found.orderId);
+        setCarrier(found.carrierCode || 'RELIABLE');
+        setCurrentStage(found.orderStatus || 'SHIPMENT_CREATED');
+      }
       showToast(`Loaded Order #${found.orderId}`, 'info');
     }
   };
@@ -242,13 +251,16 @@ export default function WebhookStudio() {
             Status: HTTP {lastResponse.status} • Time: {lastResponse.timestamp}
           </div>
           <pre style={{
-            background: 'var(--neutral-900)',
-            color: '#ffffff',
-            padding: '1rem',
+            background: '#0f172a',
+            color: '#38bdf8',
+            padding: '1.25rem',
             borderRadius: 'var(--radius-md)',
             fontFamily: 'var(--font-mono)',
-            fontSize: '0.82rem',
-            overflowX: 'auto'
+            fontSize: '0.85rem',
+            lineHeight: '1.5',
+            overflowX: 'auto',
+            border: '1px solid rgba(56, 189, 248, 0.25)',
+            boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.4)'
           }}>
             {JSON.stringify(lastResponse.data || lastResponse.error, null, 2)}
           </pre>
