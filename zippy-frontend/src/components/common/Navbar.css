@@ -65,7 +65,8 @@
   border: 1px solid rgba(14, 165, 233, 0.3);
 }
 
-.theme-toggle-btn {
+.theme-toggle-btn,
+.github-nav-btn {
   background: var(--neutral-100);
   border: 1px solid var(--neutral-200);
   color: var(--neutral-800);
@@ -78,10 +79,14 @@
   align-items: center;
   justify-content: center;
   transition: all var(--transition-fast);
+  text-decoration: none;
 }
 
-.theme-toggle-btn:hover {
+.theme-toggle-btn:hover,
+.github-nav-btn:hover {
   background: var(--neutral-200);
+  color: var(--primary-500);
+  border-color: var(--primary-500);
 }
 
 @media (max-width: 1024px) {

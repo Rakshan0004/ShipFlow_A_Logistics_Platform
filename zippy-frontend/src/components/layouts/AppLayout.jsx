@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../common/Sidebar';
 import Navbar from '../common/Navbar';
+import Footer from '../common/Footer';
 import './AppLayout.css';
 
 export default function AppLayout() {
@@ -19,6 +20,8 @@ export default function AppLayout() {
             <Outlet />
           </div>
         </main>
+
+        <Footer />
       </div>
     </div>
   );

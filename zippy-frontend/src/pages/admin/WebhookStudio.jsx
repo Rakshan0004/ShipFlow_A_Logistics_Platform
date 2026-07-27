@@ -20,6 +20,7 @@ export default function WebhookStudio() {
   const { showToast } = useToast();
   const [ordersList, setOrdersList] = useState([]);
   const [selectedOrderId, setSelectedOrderId] = useState('');
+  const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
   const [carrier, setCarrier] = useState('RELIABLE');
   const [trackingNumber, setTrackingNumber] = useState('RC71556180');
   const [currentStage, setCurrentStage] = useState('SHIPMENT_CREATED');
@@ -61,6 +62,7 @@ export default function WebhookStudio() {
         const fullOrder = fullRes.data || fullRes;
         
         console.log('📦 Order Details:', fullOrder);
+        setSelectedOrderDetails(fullOrder);
         
         // Get tracking number from various possible fields
         const tracking = fullOrder.shipment?.awbNumber || 
@@ -111,6 +113,7 @@ export default function WebhookStudio() {
         showToast(`Loaded Order #${fullOrder.orderId} - Status: ${mappedStatus}`, 'info');
       } catch (e) {
         console.error('Error loading order details:', e);
+        setSelectedOrderDetails(found);
         setTrackingNumber(found.trackingNumber || found.orderId);
         setCarrier(found.selectedCarrierCode || found.carrierCode || 'RELIABLE');
         setCurrentStage('SHIPMENT_CREATED');
@@ -140,11 +143,40 @@ export default function WebhookStudio() {
         data: data
       });
 
-      if (data.newStatus) {
+      // Parse backend response body returned inside mock service wrapper
+      let backendStatus = null;
+      let backendMsg = null;
+      if (data.backendResponseBody) {
+        try {
+          const parsed = typeof data.backendResponseBody === 'string'
+            ? JSON.parse(data.backendResponseBody)
+            : data.backendResponseBody;
+          backendStatus = parsed.status;
+          backendMsg = parsed.message;
+        } catch (e) {
+          if (data.backendResponseBody.includes('UNKNOWN_SHIPMENT')) {
+            backendStatus = 'IGNORED';
+            backendMsg = 'UNKNOWN_SHIPMENT';
+          }
+        }
+      }
+
+      if (backendStatus === 'IGNORED' && backendMsg === 'UNKNOWN_SHIPMENT') {
+        showToast(`❌ Webhook Ignored: UNKNOWN_SHIPMENT. Order #${selectedOrderId} is not booked with a courier yet!`, 'error');
+      } else if (backendStatus === 'REJECTED_INVALID_TRANSITION') {
+        showToast(`⚠️ Rejected Transition: ${backendMsg}`, 'warning');
+      } else if (backendStatus === 'DUPLICATE_IGNORED') {
+        showToast(`ℹ️ Webhook Ignored: Duplicate event already processed by backend`, 'info');
+      } else if (backendStatus === 'PROCESSED') {
+        if (data.newStatus) {
+          setCurrentStage(data.newStatus);
+        }
+        showToast(`✅ Webhook Success! Backend updated status to ${data.newStatus}`, 'success');
+      } else if (data.newStatus) {
         setCurrentStage(data.newStatus);
-        showToast(`Webhook Success! Transitioned to ${data.newStatus}`, 'success');
+        showToast(`Webhook call dispatched! Status: ${data.newStatus}`, 'success');
       } else {
-        showToast(`Webhook call processed (HTTP ${res.status})`, 'success');
+        showToast(`Webhook call processed (HTTP ${res.status})`, 'info');
       }
     } catch (err) {
       console.error('Webhook execution failed:', err);
@@ -159,6 +191,10 @@ export default function WebhookStudio() {
       setTriggering(false);
     }
   };
+
+  const isOrderUnbooked = selectedOrderDetails && 
+    (selectedOrderDetails.orderStatus === 'ORDER_CREATED' || selectedOrderDetails.orderStatus === 'CARRIER_SELECTED') && 
+    !selectedOrderDetails.shipment;
 
   const activeIdx = STAGES.findIndex(s => s.id === currentStage);
   const activeStep = activeIdx >= 0 ? activeIdx : 0;
@@ -194,6 +230,28 @@ export default function WebhookStudio() {
               }))
             ]}
           />
+
+          {isOrderUnbooked && (
+            <div style={{
+              marginTop: '1rem',
+              background: 'rgba(239, 68, 68, 0.12)',
+              border: '1px solid #ef4444',
+              borderRadius: 'var(--radius-md)',
+              padding: '0.85rem 1rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              color: '#f87171'
+            }}>
+              <span style={{ fontSize: '1.25rem' }}>⚠️</span>
+              <div style={{ fontSize: '0.84rem' }}>
+                <strong style={{ display: 'block', color: '#ef4444', marginBottom: '0.15rem' }}>
+                  Order Not Booked with Courier Yet
+                </strong>
+                This order is in <code>{selectedOrderDetails?.orderStatus || 'ORDER_CREATED'}</code> state. Webhooks will return <code>UNKNOWN_SHIPMENT</code> until a carrier is selected and a shipment is booked on the Rate Comparison page.
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Status Stepper */}
