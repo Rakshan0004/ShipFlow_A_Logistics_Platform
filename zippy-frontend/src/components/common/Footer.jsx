@@ -6,7 +6,7 @@ export default function Footer() {
     <footer className="app-footer">
       <div className="footer-content">
         <p className="footer-text">
-          © {new Date().getFullYear()} <strong>Zippy Logistics Platform</strong>. All Rights Reserved. Built by <strong>Rakshan Chintala</strong>.
+          © {new Date().getFullYear()} All Rights Reserved. Built by <strong>Rakshan Chintala</strong>.
         </p>
         <a 
           href="https://github.com/Rakshan0004/ShipFlow_A_Logistics_Platform" 
