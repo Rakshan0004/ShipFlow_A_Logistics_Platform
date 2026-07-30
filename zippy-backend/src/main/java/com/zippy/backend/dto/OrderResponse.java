@@ -11,12 +11,12 @@ public class OrderResponse {
     private CustomerDto customer;
     private AddressDto pickupAddress;
     private AddressDto deliveryAddress;
+    private BigDecimal codAmount;
 
     @JsonProperty("package")
     private PackageDto packageInfo;
 
     private String paymentType;
-    private BigDecimal codAmount;
     private String orderStatus;
     private Object selectedCarrier;
     private Object shipment;

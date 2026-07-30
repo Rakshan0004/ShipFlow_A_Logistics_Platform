@@ -15,4 +15,5 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     boolean existsByMerchantOrderId(String merchantOrderId);
 
     Optional<Order> findTopByOrderByIdDesc();
+
 }

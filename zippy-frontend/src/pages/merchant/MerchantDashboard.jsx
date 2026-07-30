@@ -13,9 +13,17 @@ export default function MerchantDashboard() {
   const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // COD amount lookup
+  const [amountOrderId, setAmountOrderId] = useState('');
+  const [fetchedAmount, setFetchedAmount] = useState(null);
+  const [amountLoading, setAmountLoading] = useState(false);
+  const [amountError, setAmountError] = useState('');
+
   useEffect(() => {
     fetchMerchantData();
   }, []);
+
+
 
   const fetchMerchantData = async () => {
     setLoading(true);
@@ -26,23 +34,42 @@ export default function MerchantDashboard() {
 
       // Calculate merchant stats
       const totalOrders = orders.length;
-      const activeShipments = orders.filter(o => 
+      const activeShipments = orders.filter(o =>
         ['CARRIER_SELECTED', 'SHIPMENT_CREATED', 'PICKED_UP', 'IN_TRANSIT', 'OUT_FOR_DELIVERY'].includes(o.orderStatus)
       ).length;
-      
+
       const today = new Date().toDateString();
-      const deliveredToday = orders.filter(o => 
-        o.orderStatus === 'DELIVERED' && 
+      const deliveredToday = orders.filter(o =>
+        o.orderStatus === 'DELIVERED' &&
         new Date(o.updatedAt).toDateString() === today
       ).length;
 
-      setStats({ totalOrders, activeShipments, deliveredToday });
+      const orderAmount = orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
+      setStats({ totalOrders, activeShipments, deliveredToday, orderAmount });
       setRecentOrders(orders.slice(0, 5));
     } catch (err) {
       console.error('Failed to fetch merchant data:', err);
       showToast('Failed to load dashboard data', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFetchAmount = async () => {
+    if (!amountOrderId.trim()) {
+      setAmountError('Please enter an Order ID.');
+      return;
+    }
+    setAmountLoading(true);
+    setAmountError('');
+    setFetchedAmount(null);
+    try {
+      const res = await ordersApi.getAmount(amountOrderId.trim());
+      setFetchedAmount(res.data ?? res);
+    } catch (err) {
+      setAmountError('Order not found or an error occurred.');
+    } finally {
+      setAmountLoading(false);
     }
   };
 
@@ -66,8 +93,8 @@ export default function MerchantDashboard() {
             Manage your shipments and track orders in one place
           </p>
         </div>
-        <Button 
-          variant="primary" 
+        <Button
+          variant="primary"
           size="lg"
           onClick={() => navigate('/merchant/orders/new')}
         >
@@ -76,10 +103,10 @@ export default function MerchantDashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-        gap: '1.5rem' 
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+        gap: '1.5rem'
       }}>
         <Card>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -122,13 +149,62 @@ export default function MerchantDashboard() {
             </div>
           </div>
         </Card>
+
+        <Card>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ fontSize: '3rem' }}>💰</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '0.875rem', color: 'var(--neutral-600)', marginBottom: '0.5rem', fontWeight: 600 }}>
+                COD Amount Lookup
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <input
+                  id="cod-amount-order-id"
+                  type="text"
+                  placeholder="Enter Order ID…"
+                  value={amountOrderId}
+                  onChange={e => { setAmountOrderId(e.target.value); setAmountError(''); setFetchedAmount(null); }}
+                  onKeyDown={e => e.key === 'Enter' && handleFetchAmount()}
+                  style={{
+                    flex: 1,
+                    padding: '0.4rem 0.75rem',
+                    border: '1px solid var(--neutral-300)',
+                    borderRadius: '6px',
+                    fontSize: '0.875rem',
+                    outline: 'none',
+                    fontFamily: 'var(--font-mono)',
+                  }}
+                />
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleFetchAmount}
+                  disabled={amountLoading}
+                  style={{ whiteSpace: 'nowrap' }}
+                >
+                  {amountLoading ? '…' : 'Get Amount'}
+                </Button>
+              </div>
+              {fetchedAmount !== null && (
+                <div style={{ marginTop: '0.5rem', fontSize: '1.5rem', fontWeight: 700, color: 'var(--success)' }}>
+                  ₹{fetchedAmount}
+                </div>
+              )}
+              {amountError && (
+                <div style={{ marginTop: '0.4rem', fontSize: '0.8rem', color: 'var(--error, #e53e3e)' }}>
+                  {amountError}
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
       </div>
 
       {/* Quick Actions */}
       <Card title="Quick Actions">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => navigate('/merchant/orders/new')}
             style={{ padding: '1.5rem', justifyContent: 'flex-start' }}
           >
@@ -141,8 +217,8 @@ export default function MerchantDashboard() {
             </div>
           </Button>
 
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => navigate('/merchant/orders')}
             style={{ padding: '1.5rem', justifyContent: 'flex-start' }}
           >
@@ -155,8 +231,8 @@ export default function MerchantDashboard() {
             </div>
           </Button>
 
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => navigate('/merchant/tracking')}
             style={{ padding: '1.5rem', justifyContent: 'flex-start' }}
           >
@@ -172,8 +248,8 @@ export default function MerchantDashboard() {
       </Card>
 
       {/* Recent Orders */}
-      <Card 
-        title="Recent Orders" 
+      <Card
+        title="Recent Orders"
         headerExtra={
           <Button variant="link" size="sm" onClick={() => navigate('/merchant/orders')}>
             View All →
@@ -190,8 +266,8 @@ export default function MerchantDashboard() {
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ 
-              width: '100%', 
+            <table style={{
+              width: '100%',
               borderCollapse: 'collapse',
               fontSize: '0.9rem'
             }}>
@@ -230,8 +306,8 @@ export default function MerchantDashboard() {
                       {new Date(order.createdAt).toLocaleDateString()}
                     </td>
                     <td style={{ padding: '0.75rem' }}>
-                      <Button 
-                        variant="link" 
+                      <Button
+                        variant="link"
                         size="sm"
                         onClick={() => navigate(`/merchant/orders/${order.orderId}`)}
                       >

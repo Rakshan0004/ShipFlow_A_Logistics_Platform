@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -19,8 +20,8 @@ public class OrderController {
     private final ShipmentService shipmentService;
 
     public OrderController(OrderService orderService,
-                           CarrierSelectionService carrierSelectionService,
-                           ShipmentService shipmentService) {
+            CarrierSelectionService carrierSelectionService,
+            ShipmentService shipmentService) {
         this.orderService = orderService;
         this.carrierSelectionService = carrierSelectionService;
         this.shipmentService = shipmentService;
@@ -55,5 +56,11 @@ public class OrderController {
     public ResponseEntity<ShipmentResponse> createShipment(@PathVariable String orderId) {
         ShipmentResponse response = shipmentService.createShipment(orderId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/{orderId}/get-amount")
+    public ResponseEntity<BigDecimal> getOrderAmount(@PathVariable String orderId) {
+        BigDecimal amount = orderService.getOrderAmount(orderId);
+        return ResponseEntity.ok(amount);
     }
 }

@@ -2,6 +2,7 @@ package com.zippy.backend.service;
 
 import com.zippy.backend.dto.CreateOrderRequest;
 import com.zippy.backend.dto.OrderResponse;
+import com.zippy.backend.dto.RecentOrderDto;
 import com.zippy.backend.exception.OrderNotFoundException;
 import com.zippy.backend.exception.ValidationException;
 import com.zippy.backend.mapper.OrderMapper;
@@ -109,5 +110,12 @@ public class OrderService {
         long currentCount = orderRepository.count();
         long nextSeq = INITIAL_SEQUENCE + currentCount;
         return ID_PREFIX + nextSeq;
+    }
+
+    public java.math.BigDecimal getOrderAmount(String orderId) {
+        Order order = orderRepository.findByZippyOrderId(orderId)
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
+
+        return order.getCodAmount();
     }
 }

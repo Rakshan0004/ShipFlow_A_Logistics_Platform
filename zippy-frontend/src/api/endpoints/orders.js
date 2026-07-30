@@ -51,6 +51,16 @@ export const ordersApi = {
   },
 
   /**
+   * @param {string} orderId
+   * @return {Promise}
+   */
+  getAmount: (orderId) => {
+    return apiClient.get(`/api/orders/${orderId}/get-amount`);
+  },
+
+
+
+  /**
    * Export orders
    * @param {Object} filters - Export filters
    * @returns {Promise} API response

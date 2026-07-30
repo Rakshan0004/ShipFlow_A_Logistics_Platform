@@ -10,18 +10,29 @@ public class RecentOrderDto {
     private String orderStatus;
     private Instant createdAt;
     private String deliveryCity;
+    private String codAmount;
 
     public RecentOrderDto() {
     }
 
     public RecentOrderDto(String orderId, String merchantOrderId, String customerName,
-                          String orderStatus, Instant createdAt, String deliveryCity) {
+            String orderStatus, Instant createdAt, String deliveryCity, String codAmount) {
         this.orderId = orderId;
         this.merchantOrderId = merchantOrderId;
         this.customerName = customerName;
         this.orderStatus = orderStatus;
         this.createdAt = createdAt;
         this.deliveryCity = deliveryCity;
+        this.codAmount = codAmount;
+
+    }
+
+    public String getCodAmount() {
+        return codAmount;
+    }
+
+    public void setCodAmount(String codAmount) {
+        this.codAmount = codAmount;
     }
 
     public String getOrderId() {
