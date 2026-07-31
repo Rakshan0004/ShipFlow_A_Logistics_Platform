@@ -1,28 +1,28 @@
 {
-  "merchantOrderId": "TEST-MERCHANT-101",
+  "merchantOrderId": "MOCK-ORD-101",
   "customer": {
-    "name": "Rahul Sharma",
+    "name": "Jane Doe",
     "phone": "9876543210",
-    "email": "rahul@example.com"
+    "email": "jane@example.com"
   },
   "pickupAddress": {
-    "addressLine1": "15 MG Road",
-    "city": "Bengaluru",
-    "state": "Karnataka",
-    "pincode": "560001"
+    "addressLine1": "123 Warehouse St",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "pincode": "400001"
   },
   "deliveryAddress": {
-    "addressLine1": "22 Connaught Place",
-    "city": "New Delhi",
+    "addressLine1": "456 Customer Rd",
+    "city": "Delhi",
     "state": "Delhi",
     "pincode": "110001"
   },
   "package": {
-    "weightGrams": 1500,
-    "lengthCm": 20,
-    "widthCm": 15,
-    "heightCm": 10
+    "weightGrams": 850,
+    "lengthCm": 15,
+    "widthCm": 10,
+    "heightCm": 5
   },
   "paymentType": "COD",
-  "codAmount": 2500.00
+  "codAmount": 1499.00
 }

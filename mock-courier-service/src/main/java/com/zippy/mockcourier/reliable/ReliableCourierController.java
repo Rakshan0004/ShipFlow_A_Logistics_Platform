@@ -38,28 +38,47 @@ public class ReliableCourierController {
                     .body("ReliableCourier Internal Server Error");
         }
 
+        BigDecimal weightKg = (weight != null && weight > 0) ? BigDecimal.valueOf(weight).divide(new BigDecimal("1000")) : new BigDecimal("1.0");
+        boolean isCod = cod != null ? cod : false;
+        
+        // --- Surface ---
+        BigDecimal surfaceBase = weightKg.multiply(new BigDecimal("75.00")).setScale(2, java.math.RoundingMode.HALF_UP);
+        BigDecimal surfaceCodFee = isCod ? new BigDecimal("30.00") : BigDecimal.ZERO;
+        BigDecimal surfaceFuel = new BigDecimal("10.00");
+        BigDecimal surfaceTaxable = surfaceBase.add(surfaceCodFee).add(surfaceFuel);
+        BigDecimal surfaceTax = surfaceTaxable.multiply(new BigDecimal("0.18")).setScale(2, java.math.RoundingMode.HALF_UP);
+        BigDecimal surfaceTotal = surfaceTaxable.add(surfaceTax);
+
         ReliableCourierRateResponse.OptionData surface = new ReliableCourierRateResponse.OptionData(
                 "RC-SURFACE",
                 "Reliable Surface",
                 new ReliableCourierRateResponse.RateDetail(
-                        new BigDecimal("95.00"),
-                        new BigDecimal("10.00"),
-                        new BigDecimal("30.00"),
-                        new BigDecimal("24.30"),
-                        new BigDecimal("159.30")
+                        surfaceBase,
+                        surfaceFuel,
+                        surfaceCodFee,
+                        surfaceTax,
+                        surfaceTotal
                 ),
                 "4-5 business days"
         );
+
+        // --- Air ---
+        BigDecimal airBase = weightKg.multiply(new BigDecimal("125.00")).setScale(2, java.math.RoundingMode.HALF_UP);
+        BigDecimal airCodFee = isCod ? new BigDecimal("40.00") : BigDecimal.ZERO;
+        BigDecimal airFuel = new BigDecimal("15.00");
+        BigDecimal airTaxable = airBase.add(airCodFee).add(airFuel);
+        BigDecimal airTax = airTaxable.multiply(new BigDecimal("0.18")).setScale(2, java.math.RoundingMode.HALF_UP);
+        BigDecimal airTotal = airTaxable.add(airTax);
 
         ReliableCourierRateResponse.OptionData air = new ReliableCourierRateResponse.OptionData(
                 "RC-AIR",
                 "Reliable Air",
                 new ReliableCourierRateResponse.RateDetail(
-                        new BigDecimal("130.00"),
-                        new BigDecimal("12.00"),
-                        new BigDecimal("30.00"),
-                        new BigDecimal("30.96"),
-                        new BigDecimal("202.96")
+                        airBase,
+                        airFuel,
+                        airCodFee,
+                        airTax,
+                        airTotal
                 ),
                 "2-3 business days"
         );

@@ -116,6 +116,7 @@ export default function MerchantOrderList() {
                   <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: 'var(--neutral-700)', whiteSpace: 'nowrap' }}>Merchant Ref</th>
                   <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: 'var(--neutral-700)' }}>Customer</th>
                   <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: 'var(--neutral-700)' }}>Status</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: 'var(--neutral-700)' }}>Payment</th>
                   <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: 'var(--neutral-700)' }}>Courier</th>
                   <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: 'var(--neutral-700)' }}>Destination</th>
                   <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: 600, color: 'var(--neutral-700)' }}>Created</th>
@@ -137,6 +138,19 @@ export default function MerchantOrderList() {
                     <td style={{ padding: '0.75rem' }}>
                       <span className={`status-badge status-${order.orderStatus?.toLowerCase().replace(/_/g, '-')}`}>
                         {order.orderStatus?.replace(/_/g, ' ')}
+                      </span>
+                    </td>
+                    <td style={{ padding: '0.75rem' }}>
+                      <span style={{
+                        display: 'inline-block',
+                        padding: '0.18rem 0.6rem',
+                        borderRadius: '999px',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        background: order.paymentType === 'COD' ? 'rgba(245,158,11,0.12)' : 'rgba(14,165,233,0.12)',
+                        color: order.paymentType === 'COD' ? '#d97706' : '#0284c7',
+                      }}>
+                        {order.paymentType || '—'}
                       </span>
                     </td>
                     <td style={{ padding: '0.75rem' }}>

@@ -11,7 +11,10 @@ import PublicLayout from './components/layouts/PublicLayout';
 // Merchant Pages
 import MerchantDashboard from './pages/merchant/MerchantDashboard';
 import MerchantOrderList from './pages/merchant/MerchantOrderList';
+import MerchantOrderDetail from './pages/merchant/MerchantOrderDetail';
+import MerchantPayments from './pages/merchant/MerchantPayments';
 import MerchantTracking from './pages/merchant/MerchantTracking';
+import ShipmentBookingConfirm from './pages/merchant/ShipmentBookingConfirm';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -60,8 +63,10 @@ export default function App() {
                   <Route path="dashboard" element={<MerchantDashboard />} />
                   <Route path="orders" element={<MerchantOrderList />} />
                   <Route path="orders/new" element={<OrderCreate />} />
-                  <Route path="orders/:id" element={<OrderDetails />} />
+                  <Route path="orders/:id" element={<MerchantOrderDetail />} />
                   <Route path="orders/:id/rates" element={<RateComparison />} />
+                  <Route path="orders/:id/book" element={<ShipmentBookingConfirm />} />
+                  <Route path="payments" element={<MerchantPayments />} />
                   <Route path="tracking" element={<MerchantTracking />} />
                 </Route>
 
@@ -71,6 +76,7 @@ export default function App() {
                   <Route path="orders" element={<AdminOrderList />} />
                   <Route path="orders/:id" element={<OrderDetails />} />
                   <Route path="orders/:id/rates" element={<RateComparison />} />
+                  <Route path="orders/:id/book" element={<ShipmentBookingConfirm />} />
                   <Route path="analytics" element={<AdminAnalytics />} />
                   <Route path="webhooks" element={<WebhookStudio />} />
                   <Route path="settings" element={<AdminSettings />} />

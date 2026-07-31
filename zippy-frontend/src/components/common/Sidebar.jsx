@@ -9,6 +9,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
     { path: '/merchant/dashboard', label: 'My Dashboard', icon: '📊' },
     { path: '/merchant/orders/new', label: 'Create Order', icon: '➕' },
     { path: '/merchant/orders', label: 'My Orders', icon: '📦' },
+    { path: '/merchant/payments', label: 'Payments', icon: '💳' },
     { path: '/merchant/tracking', label: 'Track Shipment', icon: '🔍' },
   ];
 

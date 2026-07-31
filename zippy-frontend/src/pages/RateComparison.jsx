@@ -4,7 +4,6 @@ import RateComparisonTable from '../components/features/orders/RateComparisonTab
 import Button from '../components/ui/Button/Button';
 import Card from '../components/ui/Card/Card';
 import { ratesApi } from '../api/endpoints/rates';
-import { shipmentsApi } from '../api/endpoints/shipments';
 import { useToast } from '../contexts/ToastContext';
 
 export default function RateComparison() {
@@ -15,7 +14,6 @@ export default function RateComparison() {
 
   const [rateResponse, setRateResponse] = useState(null);
   const [loadingRates, setLoadingRates] = useState(true);
-  const [selectingCarrier, setSelectingCarrier] = useState(false);
   const [sortBy, setSortBy] = useState('price');
 
   // Detect if we're on admin or merchant route
@@ -40,32 +38,9 @@ export default function RateComparison() {
     fetchRates(sortBy);
   }, [id, sortBy]);
 
-  const handleSelectCarrier = async (option) => {
-    setSelectingCarrier(true);
-    try {
-      const payload = {
-        carrierCode: option.carrierCode,
-        serviceCode: option.serviceCode,
-        quotedAmount: option.totalCharge
-      };
-
-      await ratesApi.selectCarrier(id, payload);
-      showToast(`Selected ${option.carrierName}! Creating shipment...`, 'success');
-
-      // Auto-trigger shipment creation
-      try {
-        const shipRes = await shipmentsApi.create(id);
-        showToast('Shipment booked and AWB generated!', 'success');
-        navigate(`${basePath}/orders/${id}`);
-      } catch (shipErr) {
-        showToast('Carrier selected, but shipment creation pending.', 'warning');
-        navigate(`${basePath}/orders/${id}`);
-      }
-    } catch (err) {
-      showToast(err.message || 'Failed to select carrier', 'error');
-    } finally {
-      setSelectingCarrier(false);
-    }
+  const handleSelectCarrier = (option) => {
+    // Navigate to the full booking confirmation page instead of a modal
+    navigate(`${basePath}/orders/${id}/book`, { state: { selectedOption: option } });
   };
 
   return (
@@ -101,7 +76,6 @@ export default function RateComparison() {
         sortBy={sortBy}
         setSortBy={setSortBy}
         onSelectCarrier={handleSelectCarrier}
-        selectingCarrier={selectingCarrier}
       />
     </div>
   );

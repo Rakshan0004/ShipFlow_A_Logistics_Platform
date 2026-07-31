@@ -33,13 +33,35 @@ public class FastShipController {
                     .body("FastShip Internal Server Error");
         }
 
+        BigDecimal weightKg = request.getWeightKg() != null ? BigDecimal.valueOf(request.getWeightKg()) : new BigDecimal("1.0");
+        BigDecimal invoiceValue = request.getInvoiceValue() != null ? request.getInvoiceValue() : BigDecimal.ZERO;
+        
+        // Base Freight: 80 per Kg
+        BigDecimal baseFreight = weightKg.multiply(new BigDecimal("80.00")).setScale(2, java.math.RoundingMode.HALF_UP);
+        
+        // COD Charge: 2% of invoice value if COD, else 0
+        BigDecimal codCharge = BigDecimal.ZERO;
+        if ("COD".equalsIgnoreCase(request.getPaymentMode())) {
+            codCharge = invoiceValue.multiply(new BigDecimal("0.02")).setScale(2, java.math.RoundingMode.HALF_UP);
+        }
+        
+        // Fuel Surcharge: 10% of base freight
+        BigDecimal fuelSurcharge = baseFreight.multiply(new BigDecimal("0.10")).setScale(2, java.math.RoundingMode.HALF_UP);
+        
+        // Tax: 18% GST on all charges
+        BigDecimal taxableAmount = baseFreight.add(codCharge).add(fuelSurcharge);
+        BigDecimal tax = taxableAmount.multiply(new BigDecimal("0.18")).setScale(2, java.math.RoundingMode.HALF_UP);
+        
+        // Total
+        BigDecimal totalCharge = taxableAmount.add(tax);
+
         FastShipRateResponse.ServiceDetail service = new FastShipRateResponse.ServiceDetail(
                 "FAST-AIR",
                 "FastShip Air Express",
-                new BigDecimal("120.00"),
-                new BigDecimal("35.00"),
-                new BigDecimal("27.90"),
-                new BigDecimal("182.90"),
+                baseFreight.add(fuelSurcharge), // Combine base + fuel into freightCharge
+                codCharge,
+                tax,
+                totalCharge,
                 2
         );
 

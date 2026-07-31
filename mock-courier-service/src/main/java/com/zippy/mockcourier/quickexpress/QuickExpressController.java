@@ -33,12 +33,32 @@ public class QuickExpressController {
                     .body("QuickExpress Internal Server Error");
         }
 
+        BigDecimal weightKg = request.getWeightInGrams() != null ? BigDecimal.valueOf(request.getWeightInGrams()).divide(new BigDecimal("1000")) : new BigDecimal("1.0");
+        
+        // Base Freight: 110 per Kg
+        BigDecimal baseFreight = weightKg.multiply(new BigDecimal("110.00")).setScale(2, java.math.RoundingMode.HALF_UP);
+        
+        // COD Charge: Flat 50 if COD, else 0
+        BigDecimal codCharge = BigDecimal.ZERO;
+        if (Boolean.TRUE.equals(request.getIsCod())) {
+            codCharge = new BigDecimal("50.00");
+        }
+        
+        // Fuel Surcharge: Flat 12
+        BigDecimal fuelSurcharge = new BigDecimal("12.00");
+        
+        // Tax: 18% GST
+        BigDecimal taxableAmount = baseFreight.add(codCharge).add(fuelSurcharge);
+        BigDecimal tax = taxableAmount.multiply(new BigDecimal("0.18")).setScale(2, java.math.RoundingMode.HALF_UP);
+        
+        BigDecimal totalCharge = taxableAmount.add(tax);
+
         String quoteId = mockShipmentStore.generateQuickExpressQuoteId();
         QuickExpressRateResponse.Charges charges = new QuickExpressRateResponse.Charges(
-                new BigDecimal("115.00"),
-                new BigDecimal("40.00"),
-                new BigDecimal("12.00"),
-                new BigDecimal("30.06")
+                baseFreight,
+                codCharge,
+                fuelSurcharge,
+                tax
         );
         QuickExpressRateResponse.DeliveryEstimate estimate = new QuickExpressRateResponse.DeliveryEstimate(2, 3);
 
@@ -46,7 +66,7 @@ public class QuickExpressController {
                 "AVAILABLE",
                 quoteId,
                 charges,
-                new BigDecimal("197.06"),
+                totalCharge,
                 estimate,
                 "EXPRESS"
         );
