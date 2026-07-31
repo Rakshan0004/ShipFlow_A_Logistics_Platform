@@ -1,182 +1,171 @@
-# ⚡ Zippy Logistics Platform — Multi-Courier Logistics Aggregator
+# ShipFlow — Logistics Aggregation Platform
 
-Zippy is an enterprise-grade multi-courier logistics aggregator platform designed to streamline shipping rate aggregation, carrier selection, shipment booking, and real-time tracking webhook processing across 3 distinct courier APIs (**FastShip**, **QuickExpress**, and **ReliableCourier**).
+A full-stack logistics platform that aggregates multiple courier partners, compares shipping rates, and manages the end-to-end shipment lifecycle with real-time tracking and webhook-driven status updates.
 
----
-
-## 🚀 Key Features
-
-1. **Order Domain Management**:
-   - Order creation with pincode validation (6-digit Indian postal codes), COD rules, weight validation, and Zippy order ID generation (`ZPY-ORD-10001`).
-
-2. **Parallel Rate Aggregation & Normalization**:
-   - Asynchronous parallel querying of mock courier APIs using Spring `WebClient` with a 5-second hard timeout.
-   - Partial failure tolerance: if a courier API fails (HTTP 500) or times out, Zippy returns available quotes alongside structured warning alerts.
-   - Multi-criteria sorting (`price`, `speed`, `carrier`).
-
-3. **Guaranteed Carrier Selection & Price Freezing**:
-   - Two-step transaction flow: Merchant selects carrier → Zippy verifies quoted amount against database quote (`PriceMismatchException` if price tampered) → freezes rate → creates shipment with courier.
-
-4. **Real-Time Webhook Processing & 7-Row Status Normalization**:
-   - Ingests webhooks from all 3 couriers and normalizes status codes into 7 common Zippy statuses:
-     `SHIPMENT_CREATED` ➔ `PICKED_UP` ➔ `IN_TRANSIT` ➔ `OUT_FOR_DELIVERY` ➔ `DELIVERED` / `DELIVERY_FAILED` / `RTO`.
-   - **Idempotent Ingestion**: PostgreSQL partial unique constraint `(shipment_id, carrier_event_id)` catches duplicates silently (HTTP 200 OK).
-   - **Unknown Shipment Handling**: Unregistered tracking webhooks return HTTP 200 OK (`UNKNOWN_SHIPMENT`) without creating orphan database records.
-   - **State Machine Guardrails**: Rejects illegal status regressions (e.g. `DELIVERED` ➔ `IN_TRANSIT`) with HTTP 200 OK (`REJECTED_INVALID_TRANSITION`).
-
-5. **Merchant Dashboard Single-Page Application (SPA)**:
-   - Built with React 18 & Vite, featuring a glassmorphism dark UI, sample order auto-fill (`⚡ Auto-Fill Sample Data`), live rate comparison table, frozen quote card, and real-time visual tracking timeline stepper.
-
----
-
-## 🛠 Technology Stack
-
-- **Backend Framework**: Java 21, Spring Boot 3.3.0
-- **Asynchronous HTTP Client**: Spring WebFlux `WebClient` (Netty engine)
-- **Database & Persistence**: PostgreSQL, Spring Data JPA, Flyway Versioned Migrations (V1–V4)
-- **Frontend Framework**: React 18, Vite 5, Vanilla CSS Design System
-- **Build System**: Gradle 8.7 (Multi-Module Kotlin DSL)
-- **Containerization & Orchestration**: Docker, Docker Compose
-
----
-
-## 📐 High-Level System Architecture
+## 🏗️ Architecture
 
 ```
-                                  ┌───────────────────────────┐
-                                  │   Merchant Dashboard      │
-                                  │   React 18 / Vite (SPA)   │
-                                  └─────────────┬─────────────┘
-                                                │ REST API
-                                                ▼
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                                Zippy Backend Service (Port 8080)                       │
-│                                                                                        │
-│  ┌──────────────────┐    ┌──────────────────────────┐    ┌──────────────────────────┐  │
-│  │ Order Controller │    │ Rate Aggregation Service │    │ Webhook Processing Engine│  │
-│  └────────┬─────────┘    └────────────┬─────────────┘    └────────────┬─────────────┘  │
-│           │                           │ (Parallel Calls)              │                │
-└───────────┼───────────────────────────┼───────────────────────────────┼────────────────┘
-            │                           │                               │ Webhooks
-            ▼                           ▼                               ▲
-┌────────────────────────┐  ┌───────────────────────────────────────────┼────────────────┐
-│   PostgreSQL Database   │  │              Mock Courier Service (Port 8081)             │
-│  - orders              │  │                                                            │
-│  - shipping_quotes     │  │  - FastShip API (/fastship/api/v1/rate)                    │
-│  - shipments           │  │  - QuickExpress API (/quickexpress/rates/check)            │
-│  - shipment_events     │  │  - ReliableCourier API (/reliablecourier/shipping-options) │
-└────────────────────────┘  └────────────────────────────────────────────────────────────┘
+┌──────────────┐     ┌──────────────────┐     ┌─────────────────────┐
+│   React SPA  │────▶│  Spring Boot API  │────▶│  Mock Courier APIs  │
+│   (Vercel)   │     │   (Port 8080)     │     │   (Port 8081)       │
+└──────────────┘     └────────┬─────────┘     └──────────┬──────────┘
+                              │                          │
+                              ▼                          │
+                     ┌──────────────────┐                │
+                     │   PostgreSQL 16  │                │
+                     │   (Port 5432)    │    Webhooks ◀──┘
+                     └──────────────────┘
 ```
 
----
+## ✨ Key Features
 
-## 📊 Courier API Normalization Mapping
+### Order Management
+- Create shipment orders with pickup/delivery addresses, package dimensions, and weight
+- Support for both **COD** and **Prepaid** payment modes
+- Full order lifecycle tracking (Created → Carrier Selected → Shipped → Delivered)
 
-| Normalized Zippy Status | FastShip `event_code` | QuickExpress `event.type` | ReliableCourier `statusId` |
-|---|---|---|---|
-| `SHIPMENT_CREATED` | `BOOKED` | `SC` | `10` |
-| `PICKED_UP` | `PICKED_UP` | `PU` | `20` |
-| `IN_TRANSIT` | `IN_TRANSIT` | `IT` | `30` |
-| `OUT_FOR_DELIVERY` | `OUT_FOR_DELIVERY` | `OFD` | `40` |
-| `DELIVERED` | `DELIVERED` | `DLV` | `50` |
-| `DELIVERY_FAILED` | `DELIVERY_FAILED` | `NDR` | `60` |
-| `RTO` | `RETURNED` | `RTO` | `70` |
+### Rate Aggregation Engine
+- Aggregates rates from **3 courier partners** (FastShip, QuickExpress, ReliableCourier)
+- **Dynamic pricing** based on package weight, dimensions, and COD status
+- Realistic freight breakdown: Base Freight + COD Handling Fee + Fuel Surcharge + 18% GST
+- Sort and compare rates by price, delivery time, or carrier
 
----
+### Shipment Booking & AWB Generation
+- Full-page booking confirmation with transparent cost breakdown
+- Clear separation of Product Value (COD collection) vs Courier Freight charges
+- AWB (Air Waybill) generation on booking confirmation
 
-## 💻 Quick Start & Running Locally
+### Real-Time Tracking
+- Webhook-driven status updates from courier partners
+- Visual shipment timeline with step-by-step tracking
+- Public tracking page for end customers (no login required)
 
-### 🐳 Option 1: Running via Docker Compose (Recommended)
+### Payments & Settlements
+- Auto-generated payment records linked 1:1 with orders
+- Tracks payment status, settlement status, and COD remittance
+- Financial analytics on the merchant dashboard
 
-**The fastest way to run the complete platform:**
+### Analytics Dashboard
+- KPI cards: Total Shipments, Active Transit, Pending Settlements, Freight Spend
+- **Shipment Funnel** (Donut Chart) — visual order status distribution
+- **Revenue vs Freight Cost** (Bar Chart) — financial margin analysis
+- Built with Recharts for responsive, interactive visualizations
 
+### Admin Panel
+- Webhook Studio for simulating courier webhook events
+- Order management and system-wide analytics
+- Settings and configuration management
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 18, React Router 6, Recharts, Lucide Icons |
+| Backend | Java 21, Spring Boot 3.3, Spring Data JPA |
+| Database | PostgreSQL 16 with Flyway migrations |
+| Mock Services | Spring Boot microservice simulating 3 courier APIs |
+| Containerization | Docker, Docker Compose |
+| Deployment | Vercel (Frontend), AWS EC2 (Backend) |
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Docker & Docker Compose
+- Node.js 22+ (for local frontend development)
+- Java 21+ (for local backend development)
+
+### Run with Docker Compose
 ```bash
-# Windows
-docker-start.bat
+# Clone the repository
+git clone https://github.com/Rakshan0004/ShipFlow_A_Logistics_Platform.git
+cd ShipFlow_A_Logistics_Platform
 
-# Or use docker-compose directly
-docker-compose up --build
+# Start all services
+docker compose up --build -d
+
+# Access the application
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:8080
+# Mock Courier Service: http://localhost:8081
 ```
 
-**Wait 1-2 minutes for all services to start, then access:**
-- **Frontend Dashboard**: http://localhost:3000
-- **Backend API**: http://localhost:8080/api
-- **Mock Courier Service**: http://localhost:8081
-- **Database**: localhost:5432 (user: zippy, password: zippy, db: zippydb)
-
-**Stop all services:**
+### Run Frontend Locally
 ```bash
-# Windows
-docker-stop.bat
-
-# Or use docker-compose directly
-docker-compose down
+cd zippy-frontend
+npm install
+npm run dev
+# Runs on http://localhost:5173
 ```
 
-📖 **Detailed Docker Guide**: See [DOCKER_SETUP.md](DOCKER_SETUP.md) for comprehensive configuration, troubleshooting, and production considerations.
+## 📁 Project Structure
 
-📖 **Quick Reference**: See [QUICK_START.md](QUICK_START.md) for feature testing and common tasks.
-
----
-
-### 🔧 Option 2: Running Locally Without Docker (Development)
-
-For active development with hot-reload:
-
-1. **Start Local PostgreSQL Database**:
-   Ensure PostgreSQL is running locally on port `5432` with database `zippy_db`, user `zippy_user`, and password `zippy_password`.
-
-2. **Run Backend Services via Gradle**:
-   ```bash
-   # Windows PowerShell / CMD
-   .\run-local.bat
-
-   # Linux / macOS
-   ./run-local.sh
-   ```
-
-3. **Run React Frontend**:
-   ```bash
-   cd zippy-frontend
-   npm install
-   npm run dev
-   ```
-
----
-
-## 🧪 Automated Test Verification
-
-Run the full automated test suite (unit, integration, and controller tests across all modules):
-
-```bash
-.\gradlew test
+```
+├── zippy-frontend/          # React SPA
+│   ├── src/
+│   │   ├── api/             # Axios API client & endpoints
+│   │   ├── components/      # Reusable UI components
+│   │   ├── contexts/        # React Context (Toast, Theme)
+│   │   ├── pages/           # Route-level page components
+│   │   └── utils/           # Formatters, constants
+│   └── vercel.json          # Vercel SPA routing config
+│
+├── zippy-backend/           # Spring Boot API
+│   ├── src/main/java/
+│   │   ├── controller/      # REST controllers
+│   │   ├── service/         # Business logic
+│   │   ├── entity/          # JPA entities
+│   │   ├── repository/      # Spring Data repositories
+│   │   └── dto/             # Request/Response DTOs
+│   └── src/main/resources/
+│       └── db/migration/    # Flyway SQL migrations
+│
+├── mock-courier-service/    # Simulated courier partner APIs
+│   ├── fastship/            # FastShip courier (Air Express)
+│   ├── quickexpress/        # QuickExpress courier
+│   └── reliable/            # ReliableCourier (Surface + Air)
+│
+└── docker-compose.yml       # Multi-service orchestration
 ```
 
-Expected Output:
-```
-BUILD SUCCESSFUL in 29s
-8 actionable tasks: 5 executed, 3 up-to-date
-```
-- **41/41 tests passed** (0 failures, 0 errors).
+## 🔌 API Endpoints
 
----
+### Orders
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/orders` | Create a new order |
+| GET | `/api/orders` | List all orders |
+| GET | `/api/orders/{id}` | Get order details |
+| GET | `/api/orders/{id}/amount` | Get COD amount for an order |
 
-## 📬 Postman Collection
+### Rate Aggregation
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/rates/{orderId}/fetch` | Fetch & compare courier rates |
+| POST | `/api/rates/{orderId}/select` | Select a courier and book shipment |
 
-A complete Postman collection is included under [`postman/zippy-logistics.postman_collection.json`](file:///c:/Projects/Logistics%20Platform/postman/zippy-logistics.postman_collection.json) covering:
-1. `Create Order` (`POST /api/orders`)
-2. `Fetch Parallel Rates` (`POST /api/orders/{id}/rates?sort=price`)
-3. `Select Carrier` (`POST /api/orders/{id}/select-carrier`)
-4. `Create Shipment` (`POST /api/orders/{id}/create-shipment`)
-5. `Order Tracking` (`GET /api/orders/{id}/tracking`)
-6. `Webhooks` (FastShip, QuickExpress, ReliableCourier)
-7. `Mock Status Trigger` (`POST /mock/shipments/fastship/advance`)
+### Payments
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/payments` | List all payments |
+| GET | `/api/payments/{orderId}` | Get payment for a specific order |
 
----
+### Tracking
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/tracking/{trackingNumber}` | Get tracking details |
+| POST | `/api/webhooks/{carrier}` | Receive courier webhook events |
 
-## ⚙️ Simulation & Webhook Controls
+## 📊 Dynamic Pricing Engine
 
-To test status advancement and webhooks live in your browser:
-1. Create an order and book a shipment in the Merchant Dashboard (`http://localhost:3000`).
-2. Go to the **⚙ Simulation & Webhooks** tab.
-3. Click **⏩ Advance to Next Status** — the mock courier will send a live webhook to the Zippy Backend, updating the visual tracking timeline in real time!
+The mock courier service calculates rates based on actual shipment parameters:
+
+| Courier | Base Rate | COD Fee | Fuel | Tax |
+|---------|----------|---------|------|-----|
+| FastShip Air | ₹80/kg | 2% of invoice | 10% of base | 18% GST |
+| QuickExpress | ₹110/kg | Flat ₹50 | Flat ₹12 | 18% GST |
+| Reliable Surface | ₹75/kg | Flat ₹30 | Flat ₹10 | 18% GST |
+| Reliable Air | ₹125/kg | Flat ₹40 | Flat ₹15 | 18% GST |
+
+## 📝 License
+
+This project is built as a technical assignment for demonstration purposes.
