@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import { ToastProvider } from './contexts/ToastContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import ErrorBoundary from './components/common/ErrorBoundary';
@@ -111,6 +112,7 @@ export default function App() {
           <ToastContainer />
         </ErrorBoundary>
       </ToastProvider>
+      <Analytics />
     </ThemeProvider>
   );
 }
