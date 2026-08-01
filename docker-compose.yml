@@ -52,6 +52,9 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       JAVA_OPTS: "-Xmx512m -Xms256m"
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
     depends_on:
       postgres:
         condition: service_healthy
