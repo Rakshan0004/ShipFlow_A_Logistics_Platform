@@ -3,9 +3,9 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://postgres:5432/zippydb
-    username: zippy
-    password: zippy
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/zippydb}
+    username: ${SPRING_DATASOURCE_USERNAME:zippy}
+    password: ${SPRING_DATASOURCE_PASSWORD:zippy}
 
 couriers:
   fastship:
