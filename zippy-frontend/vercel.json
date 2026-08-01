@@ -1,6 +1,7 @@
 {
   "rewrites": [
     { "source": "/api/(.*)", "destination": "http://15.134.128.185:8080/api/$1" },
+    { "source": "/mock/(.*)", "destination": "http://15.134.128.185:8081/mock/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

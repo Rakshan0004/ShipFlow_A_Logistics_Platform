@@ -126,7 +126,7 @@ export default function WebhookStudio() {
     setTriggering(true);
     setLastResponse(null);
 
-    const targetUrl = `http://localhost:8081/mock/shipments/${carrier.toLowerCase()}/${endpointPath}`;
+    const targetUrl = `/mock/shipments/${carrier.toLowerCase()}/${endpointPath}`;
 
     try {
       const res = await fetch(targetUrl, {
