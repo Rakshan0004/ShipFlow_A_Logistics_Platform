@@ -1,6 +1,10 @@
 # ⚡ Zippy Logistics Platform — Multi-Courier Logistics Aggregator
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-View_Project-success?style=for-the-badge&logo=vercel)](https://ship-flow-a-logistics-platform.vercel.app/merchant/dashboard)
+
 Zippy is an enterprise-grade multi-courier logistics aggregator platform designed to streamline shipping rate aggregation, carrier selection, shipment booking, and real-time tracking webhook processing across 3 distinct courier APIs (**FastShip**, **QuickExpress**, and **ReliableCourier**).
+
+🌟 **Live Demo:** [https://ship-flow-a-logistics-platform.vercel.app/merchant/dashboard](https://ship-flow-a-logistics-platform.vercel.app/merchant/dashboard)
 
 ---
 
